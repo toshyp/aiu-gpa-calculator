@@ -56,10 +56,10 @@ export default function AdminPanel() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a" }}>
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "20px" }}>
+    <div className="page-wrapper" style={{ minHeight: "100vh", background: "#0f172a" }}>
+      <div className="admin-panel" style={{ maxWidth: "1100px", margin: "0 auto", padding: "20px" }}>
         {/* Admin Header */}
-        <div style={{
+        <div className="admin-header" style={{
           display: "flex", justifyContent: "space-between", alignItems: "center",
           marginBottom: "24px"
         }}>
@@ -88,7 +88,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
+        <div className="admin-tabs-wrapper" style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
           <button style={tabStyle("courses")} onClick={() => setActiveTab("courses")}>
             <BookOpen size={16} /> Courses
           </button>

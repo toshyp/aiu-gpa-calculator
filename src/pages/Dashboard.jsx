@@ -252,10 +252,10 @@ export default function Dashboard() {
 
   if (!prog) {
     return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
+      <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
         <div style={{ maxWidth: "960px", margin: "0 auto", paddingTop: "32px" }}>
           {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px" }}>
+          <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
               <div style={{
                 width: "44px", height: "44px", borderRadius: "12px",
@@ -359,9 +359,9 @@ export default function Dashboard() {
 
   if (prog.hasTracks && !track) {
     return (
-      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
+      <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
         <div style={{ maxWidth: "680px", margin: "0 auto", paddingTop: "32px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
+          <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
             <div>
               <button onClick={() => { setSelectedProgram(null); setSelectedTrack(null); }}
                 style={{
@@ -439,10 +439,10 @@ export default function Dashboard() {
   const trackOrProg = track || prog;
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)" }}>
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "20px" }}>
+    <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)" }}>
+      <div className="dashboard-content" style={{ maxWidth: "1100px", margin: "0 auto", padding: "20px" }}>
         {/* Header */}
-        <div style={{
+        <div className="page-header" style={{
           display: "flex", justifyContent: "space-between", alignItems: "center",
           marginBottom: "24px", flexWrap: "wrap", gap: "12px"
         }}>
@@ -478,7 +478,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className="page-header-actions" style={{ display: "flex", gap: "8px" }}>
             <button onClick={() => { saveUserData(); alert("Data saved!"); }}
               style={{
                 padding: "10px 20px", border: "none", borderRadius: "10px",
@@ -502,7 +502,7 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Cards */}
-        <div style={{
+        <div className="summary-cards" style={{
           display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
           gap: "12px", marginBottom: "28px"
         }}>
@@ -532,7 +532,7 @@ export default function Dashboard() {
         </div>
 
         {/* Semester Tabs */}
-        <div style={{
+        <div className="semester-tabs-wrapper" style={{
           display: "flex", gap: "6px", marginBottom: "16px",
           overflowX: "auto", flexWrap: "wrap"
         }}>
@@ -554,7 +554,7 @@ export default function Dashboard() {
         </div>
 
         {/* Courses Table */}
-        <div style={{
+        <div className="course-table" style={{
           background: "rgba(255,255,255,0.02)", borderRadius: "18px",
           border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden", marginBottom: "16px"
         }}>

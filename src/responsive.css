@@ -1,0 +1,215 @@
+/* ========== RESPONSIVE ========== */
+
+/* Wrappers */
+.page-wrapper {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .page-wrapper { padding: 12px; }
+}
+
+/* Login / Register card */
+@media (max-width: 480px) {
+  .login-card { padding: 32px 20px 28px !important; }
+}
+
+/* Program & Track grids */
+.program-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* Dashboard */
+.dashboard-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+}
+@media (max-width: 768px) {
+  .dashboard-content { padding: 12px; }
+}
+
+/* Semester tab bar */
+.semester-tabs-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.semester-tabs-wrapper::-webkit-scrollbar { display: none; }
+.semester-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+/* Course table - stack on mobile */
+@media (max-width: 640px) {
+  .course-table thead { display: none; }
+  .course-table tr {
+    display: block;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .course-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border: none;
+  }
+  .course-table td::before {
+    content: attr(data-label);
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+/* Summary cards - stack on mobile */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+@media (max-width: 480px) {
+  .summary-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+
+/* Admin tabs - scrollable on mobile */
+.admin-tabs-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.admin-tabs-wrapper::-webkit-scrollbar { display: none; }
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+/* Admin grids - stack on mobile */
+@media (max-width: 640px) {
+  .admin-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-grid-4 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px;
+  }
+  .admin-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Header responsive */
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+  .page-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .page-header-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* What-If panel */
+@media (max-width: 640px) {
+  .whatif-panel {
+    flex-direction: column !important;
+  }
+  .whatif-panel > div {
+    width: 100% !important;
+  }
+}
+
+/* Results panel */
+.results-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .results-panel { grid-template-columns: 1fr; }
+}
+
+/* Card lists */
+@media (max-width: 640px) {
+  .student-list-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .prereq-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Footer */
+@media (max-width: 640px) {
+  .uni-footer {
+    font-size: 10px !important;
+    padding: 16px 0 !important;
+  }
+}
+
+/* Buttons on mobile */
+@media (max-width: 480px) {
+  .btn-responsive {
+    padding: 12px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Select elements on mobile - full width */
+@media (max-width: 640px) {
+  select, input[type="text"], input[type="password"], input[type="number"] {
+    font-size: 16px !important; /* prevent iOS zoom */
+  }
+}
+
+/* Program cards on mobile */
+@media (max-width: 480px) {
+  .program-card {
+    padding: 16px !important;
+  }
+}
+
+/* Track cards on mobile */
+@media (max-width: 480px) {
+  .track-card {
+    padding: 14px !important;
+  }
+}
+
+/* Course row responsive */
+@media (max-width: 640px) {
+  .course-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+  }
+  .course-row > * {
+    width: 100% !important;
+  }
+}
+
+/* Admin panel mobile */
+@media (max-width: 640px) {
+  .admin-panel {
+    padding: 12px !important;
+  }
+  .admin-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}

@@ -54,7 +54,7 @@ export default function LoginPage() {
   });
 
   return (
-    <div style={{
+    <div className="page-wrapper" style={{
       minHeight: "100vh",
       background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 40%, #0b1120 100%)",
       display: "flex", alignItems: "center", justifyContent: "center", padding: "20px",
@@ -77,7 +77,7 @@ export default function LoginPage() {
         pointerEvents: "none"
       }} />
 
-      <div style={{
+      <div className="login-card" style={{
         background: "rgba(255,255,255,0.04)", backdropFilter: "blur(24px)",
         borderRadius: "28px", padding: "48px 44px 40px", width: "100%", maxWidth: "420px",
         border: "1px solid rgba(255,255,255,0.08)",
