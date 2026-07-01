@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import courses from "../data/courses";
 import programs from "../data/programs";
-import { Save, LogOut, BookOpen, GitBranch, Shield, List, Plus, Trash2, X } from "lucide-react";
+import { Save, LogOut, BookOpen, GitBranch, Shield, List, Plus, Trash2, X, Users, ChevronDown, ChevronRight } from "lucide-react";
 
 export default function AdminPanel() {
   const {
@@ -13,6 +13,9 @@ export default function AdminPanel() {
     prereqData, addPrereq, removePrereq,
     courseOverrides, setCourseOverrides, getCourseName,
     courses: allCourses,
+    allStudents, loadAllStudents,
+    studentDetails, setStudentDetails, viewStudentDetails,
+    removeStudent,
   } = useApp();
   const [activeTab, setActiveTab] = useState("courses");
   const [editCourse, setEditCourse] = useState(null);
@@ -30,6 +33,10 @@ export default function AdminPanel() {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
+
+  useEffect(() => {
+    if (activeTab === "students") loadAllStudents();
+  }, [activeTab, loadAllStudents]);
 
   const filteredCourses = Object.values(courses).filter(c =>
     c.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,6 +100,9 @@ export default function AdminPanel() {
           </button>
           <button style={tabStyle("pools")} onClick={() => setActiveTab("pools")}>
             <List size={16} /> Pools (UC/UE)
+          </button>
+          <button style={tabStyle("students")} onClick={() => setActiveTab("students")}>
+            <Users size={16} /> Students
           </button>
           <button style={tabStyle("account")} onClick={() => setActiveTab("account")}>
             <Shield size={16} /> Account
@@ -403,6 +413,131 @@ export default function AdminPanel() {
                   <Plus size={14} /> Add
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Students Tab */}
+        {activeTab === "students" && (
+          <div>
+            <div style={{
+              background: "rgba(255,255,255,0.03)", borderRadius: "16px",
+              border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: "16px"
+            }}>
+              <div style={{
+                display: "grid", gridTemplateColumns: "120px 1fr 180px 100px",
+                padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
+                color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
+              }}>
+                <span>Student ID</span>
+                <span>Registered</span>
+                <span>Last Login</span>
+                <span></span>
+              </div>
+              {allStudents.length === 0 && (
+                <div style={{ padding: "24px 20px", textAlign: "center", color: "#475569", fontSize: "13px" }}>
+                  No registered students yet.
+                </div>
+              )}
+              {allStudents.map(s => (
+                <div key={s.student_id}>
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "120px 1fr 180px 100px",
+                    padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    alignItems: "center"
+                  }}>
+                    <span style={{ color: "#3b82f6", fontSize: "13px", fontWeight: 600 }}>{s.student_id}</span>
+                    <span style={{ color: "#94a3b8", fontSize: "12px" }}>
+                      {s.created_at ? new Date(s.created_at).toLocaleString() : "—"}
+                    </span>
+                    <span style={{ color: "#94a3b8", fontSize: "12px" }}>
+                      {s.last_login ? new Date(s.last_login).toLocaleString() : "Never"}
+                    </span>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <button onClick={() => viewStudentDetails(s.student_id)}
+                        style={{
+                          padding: "4px 10px", border: "1px solid rgba(59,130,246,0.3)", borderRadius: "6px",
+                          background: "rgba(59,130,246,0.1)", color: "#3b82f6", cursor: "pointer",
+                          fontSize: "11px", display: "flex", alignItems: "center", gap: "4px"
+                        }}>
+                        {studentDetails?.studentId === s.student_id ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                        View
+                      </button>
+                      <button onClick={async () => {
+                        if (window.confirm(`Delete student ${s.student_id} and all their data?`)) {
+                          await removeStudent(s.student_id);
+                        }
+                      }}
+                        style={{
+                          padding: "4px 10px", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "6px",
+                          background: "rgba(239,68,68,0.1)", color: "#ef4444", cursor: "pointer",
+                          fontSize: "11px"
+                        }}>
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  </div>
+                  {studentDetails?.studentId === s.student_id && (
+                    <div style={{
+                      padding: "16px 20px 16px 40px",
+                      background: "rgba(255,255,255,0.02)",
+                      borderBottom: "1px solid rgba(255,255,255,0.05)"
+                    }}>
+                      <div style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "8px" }}>
+                        Grades ({studentDetails.grades.length}):
+                      </div>
+                      {studentDetails.grades.length === 0 ? (
+                        <span style={{ color: "#475569", fontSize: "11px", fontStyle: "italic" }}>No grades recorded</span>
+                      ) : (
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
+                          {studentDetails.grades.map(g => (
+                            <span key={g.course_code} style={{
+                              padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
+                              background: "rgba(59,130,246,0.1)", color: "#3b82f6"
+                            }}>
+                              {g.course_code}: {g.grade}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "8px" }}>
+                        UC Selections ({studentDetails.ucSelections.length}):
+                      </div>
+                      {studentDetails.ucSelections.length === 0 ? (
+                        <span style={{ color: "#475569", fontSize: "11px", fontStyle: "italic" }}>None</span>
+                      ) : (
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
+                          {studentDetails.ucSelections.map(s => (
+                            <span key={s.slot} style={{
+                              padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
+                              background: "rgba(139,92,246,0.1)", color: "#8b5cf6"
+                            }}>
+                              Slot {s.slot}: {s.course_code}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "8px" }}>
+                        UE Selections ({studentDetails.ueSelections.length}):
+                      </div>
+                      {studentDetails.ueSelections.length === 0 ? (
+                        <span style={{ color: "#475569", fontSize: "11px", fontStyle: "italic" }}>None</span>
+                      ) : (
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                          {studentDetails.ueSelections.map(s => (
+                            <span key={s.slot} style={{
+                              padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
+                              background: "rgba(236,72,153,0.1)", color: "#ec4899"
+                            }}>
+                              Slot {s.slot}: {s.course_code}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

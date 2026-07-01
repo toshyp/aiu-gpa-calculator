@@ -13,13 +13,50 @@ async function studentLogin(context, id) {
   await page.waitForLoadState("domcontentloaded", { timeout: 10000 }).catch(() => {});
   await sleep(1500);
 
-  const input = await page.$('input[type="text"]');
-  if (!input) { await page.close(); return null; }
-  await input.fill(id);
-  const submit = await page.$('button[type="submit"]');
+  // First, register the student (in case they don't exist in Supabase)
+  // Click Register tab
+  const regBtn = await page.$('button:has-text("Register")');
+  if (regBtn) await regBtn.click();
+  await sleep(300);
+
+  const inputs = await page.$$('input[type="text"]');
+  if (inputs.length === 0) { await page.close(); return null; }
+  await inputs[0].fill(id);
+
+  const pwInputs = await page.$$('input[type="password"]');
+  if (pwInputs.length > 0) await pwInputs[0].fill("test123");
+
+  let submit = await page.$('button[type="submit"]');
+  if (submit) await submit.click();
+  await sleep(2000);
+  await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+  await sleep(500);
+
+  // Check if we're on the dashboard already
+  let body = await page.textContent("body").catch(() => "");
+  if (body.includes("Select") || body.includes("Program")) return page;
+
+  // If still on login, try signing in
+  await page.goto(BASE + "?r=" + Date.now(), { timeout: 20000 });
+  await page.waitForLoadState("domcontentloaded", { timeout: 10000 }).catch(() => {});
+  await sleep(1000);
+
+  // Make sure we're on Sign In mode
+  const signInBtn = await page.$('button:has-text("Sign In")');
+  if (signInBtn) await signInBtn.click();
+  await sleep(300);
+
+  const inputs2 = await page.$$('input[type="text"]');
+  if (inputs2.length === 0) { await page.close(); return null; }
+  await inputs2[0].fill(id);
+
+  const pwInputs2 = await page.$$('input[type="password"]');
+  if (pwInputs2.length > 0) await pwInputs2[0].fill("test123");
+
+  submit = await page.$('button[type="submit"]');
   if (!submit) { await page.close(); return null; }
   await submit.click();
-  await sleep(1500);
+  await sleep(2000);
   await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
   await sleep(1000);
   return page;

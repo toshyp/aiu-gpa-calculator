@@ -1,5 +1,14 @@
--- AIU GPA Calculator — Supabase Schema
--- Run this in the Supabase SQL Editor (https://supabase.com/dashboard/project/_/sql/new)
+-- AIU GPA Calculator — Complete Supabase Schema
+-- Run this in the Supabase SQL Editor
+
+-- Students accounts
+CREATE TABLE IF NOT EXISTS students (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  student_id TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_login TIMESTAMPTZ
+);
 
 -- Admin account
 CREATE TABLE IF NOT EXISTS admin_account (
@@ -69,7 +78,17 @@ CREATE TABLE IF NOT EXISTS ue_selections (
   UNIQUE (student_id, slot)
 );
 
+-- Student elective selections
+CREATE TABLE IF NOT EXISTS elective_selections (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  student_id TEXT NOT NULL,
+  slot TEXT NOT NULL,
+  course_code TEXT NOT NULL,
+  UNIQUE (student_id, slot)
+);
+
 -- Enable Row Level Security
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_account ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prerequisites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE course_overrides ENABLE ROW LEVEL SECURITY;
@@ -78,40 +97,36 @@ ALTER TABLE ue_pool ENABLE ROW LEVEL SECURITY;
 ALTER TABLE grades ENABLE ROW LEVEL SECURITY;
 ALTER TABLE uc_selections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ue_selections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE elective_selections ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: Allow all operations (safe with anon key for this educational app)
--- In production, you would restrict based on student_id matching
-
-CREATE POLICY "Allow all on admin_account"
-  ON admin_account FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow all on prerequisites"
-  ON prerequisites FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow all on course_overrides"
-  ON course_overrides FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow all on uc_pool"
-  ON uc_pool FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow all on ue_pool"
-  ON ue_pool FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow all on grades"
-  ON grades FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow all on uc_selections"
-  ON uc_selections FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow all on ue_selections"
-  ON ue_selections FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all on students" ON students;
+DROP POLICY IF EXISTS "Allow all on admin_account" ON admin_account;
+DROP POLICY IF EXISTS "Allow all on prerequisites" ON prerequisites;
+DROP POLICY IF EXISTS "Allow all on course_overrides" ON course_overrides;
+DROP POLICY IF EXISTS "Allow all on uc_pool" ON uc_pool;
+DROP POLICY IF EXISTS "Allow all on ue_pool" ON ue_pool;
+DROP POLICY IF EXISTS "Allow all on grades" ON grades;
+DROP POLICY IF EXISTS "Allow all on uc_selections" ON uc_selections;
+DROP POLICY IF EXISTS "Allow all on ue_selections" ON ue_selections;
+DROP POLICY IF EXISTS "Allow all on elective_selections" ON elective_selections;
+CREATE POLICY "Allow all on students" ON students FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on admin_account" ON admin_account FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on prerequisites" ON prerequisites FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on course_overrides" ON course_overrides FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on uc_pool" ON uc_pool FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on ue_pool" ON ue_pool FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on grades" ON grades FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on uc_selections" ON uc_selections FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on ue_selections" ON ue_selections FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all on elective_selections" ON elective_selections FOR ALL USING (true) WITH CHECK (true);
 
 -- Insert default admin
 INSERT INTO admin_account (id, username, password)
 VALUES (1, 'Ahmed', '3320')
 ON CONFLICT (id) DO NOTHING;
 
--- Insert default UC pool (from programs.js data: 7 slots)
+-- Insert default UC pool
 INSERT INTO uc_pool (slot, code, name, credits) VALUES
   (1, 'UC1', 'University Requirement 1', 2),
   (2, 'UC2', 'University Requirement 2', 2),
@@ -122,7 +137,7 @@ INSERT INTO uc_pool (slot, code, name, credits) VALUES
   (7, 'UC7', 'University Requirement 7', 2)
 ON CONFLICT (slot) DO NOTHING;
 
--- Insert default UE pool (from programs.js data: 4 slots)
+-- Insert default UE pool
 INSERT INTO ue_pool (slot, code, name, credits) VALUES
   (1, 'E1', 'Technical Elective 1', 2),
   (2, 'E2', 'Technical Elective 2', 2),

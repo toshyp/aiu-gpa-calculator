@@ -4,7 +4,7 @@ import { gradeOptions } from "../data/gradeScale";
 import {
   BookOpen, GraduationCap, BarChart3, Save, LogOut,
   ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Trash2,
-  Target, TrendingUp, Sparkles, Layers, ArrowRight
+  Target, TrendingUp, Sparkles, Layers, ArrowRight, Printer
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -176,6 +176,73 @@ export default function Dashboard() {
       if (p !== undefined) { pts += p * c; crs += c; }
     });
     return crs > 0 ? (pts / crs).toFixed(2) : "—";
+  }
+
+  function printReport() {
+    const totalCredits = trackOrProg.totalCredits;
+    const gpa = showResults ? cumGPA.toFixed(2) : "—";
+    const gradeNames = { "A+":"A+","A":"A","A-":"A-","B+":"B+","B":"B","B-":"B-","C+":"C+","C":"C","C-":"C-","D+":"D+","D":"D","D-":"D-","F":"F" };
+    let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Academic Report - ${user}</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #1e293b; padding: 40px; }
+      .header { text-align: center; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 3px solid #3b82f6; }
+      .header h1 { font-size: 24px; color: #0f172a; margin-bottom: 4px; }
+      .header .sub { color: #64748b; font-size: 13px; }
+      .header .aiu { font-size: 14px; color: #3b82f6; font-weight: 700; margin-bottom: 8px; }
+      .info { display: flex; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+      .info-item { flex: 1; min-width: 140px; padding: 14px 18px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; }
+      .info-item .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+      .info-item .value { font-size: 22px; font-weight: 700; color: #0f172a; }
+      .semester { margin-bottom: 24px; page-break-inside: avoid; }
+      .semester h3 { font-size: 15px; color: #0f172a; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th { text-align: left; padding: 8px 12px; background: #f1f5f9; color: #475569; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+      td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }
+      .grade-badge { display: inline-block; padding: 2px 10px; border-radius: 6px; font-weight: 700; font-size: 12px; }
+      .grade-pass { background: #dcfce7; color: #166534; }
+      .grade-fail { background: #fee2e2; color: #991b1b; }
+      .grade-none { color: #94a3b8; font-style: italic; }
+      .type-badge { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #e2e8f0; color: #475569; }
+      .footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 11px; }
+      @media print { body { padding: 20px; } }
+    </style></head><body>
+    <div class="header">
+      <div class="aiu">ALAMEIN INTERNATIONAL UNIVERSITY</div>
+      <h1>Academic Report</h1>
+      <div class="sub">Faculty of Computer Science & Engineering</div>
+    </div>
+    <div class="info">
+      <div class="info-item"><div class="label">Student ID</div><div class="value">${user}</div></div>
+      <div class="info-item"><div class="label">Program</div><div class="value">${prog.name}${track ? ` — ${track.name}` : ""}</div></div>
+      <div class="info-item"><div class="label">Cumulative GPA</div><div class="value">${gpa} / 4.0</div></div>
+      <div class="info-item"><div class="label">Completed Credits</div><div class="value">${completedCredits} / ${totalCredits}</div></div>
+    </div>`;
+
+    semesters.forEach(sem => {
+      const semGPA = calcSemGPA(sem.number);
+      const semList = getSemesterCourses(sem.number);
+      html += `<div class="semester"><h3>Semester ${sem.number} — GPA: ${semGPA}</h3><table><thead><tr><th>Code</th><th>Course Name</th><th>Type</th><th>Credits</th><th>Grade</th></tr></thead><tbody>`;
+      semList.forEach(({ code, type, prereq }) => {
+        const grade = getGrade(code);
+        const cr = getCourseCredits(code);
+        const typeLabel = type === "university-requirement" ? "UC" : type === "university-elective" ? "UE" : type === "field-training" ? "FT" : type === "graduation-project" ? "GP" : type === "elective" ? "TE" : "CR";
+        const gradeClass = grade === "F" ? "grade-fail" : grade ? "grade-pass" : "grade-none";
+        const courseName = courses[code]?.name || code;
+        html += `<tr><td style="font-weight:600;color:#3b82f6">${code}</td><td>${courseName}</td><td><span class="type-badge">${typeLabel}</span></td><td>${cr}</td><td>${grade ? `<span class="grade-badge ${gradeClass}">${grade}</span>` : '<span class="grade-none">—</span>'}</td></tr>`;
+        if (!prereq.met && grade) {
+          html += `<tr style="background:#fffbeb"><td colspan="5" style="font-size:11px;color:#d97706">⚠ Prerequisite missing: ${prereq.missing.join(", ")}</td></tr>`;
+        }
+      });
+      html += `</tbody></table></div>`;
+    });
+
+    html += `<div class="footer">This report was generated by AIU GPA Calculator — Alamein International University</div>`;
+    html += `</body></html>`;
+    const w = window.open("", "_blank");
+    w.document.write(html);
+    w.document.close();
+    w.print();
   }
 
   const univReqPool = getUcPool();
@@ -646,6 +713,19 @@ export default function Dashboard() {
             onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(139,92,246,0.35)"; }}
           >
             <BarChart3 size={18} /> Calculate GPA
+          </button>
+          <button onClick={printReport}
+            style={{
+              padding: "14px 24px", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "12px",
+              background: "rgba(59,130,246,0.06)", color: "#60a5fa",
+              fontSize: "14px", fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: "8px",
+              transition: "all 0.2s"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.12)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.06)"; }}
+          >
+            <Printer size={16} /> Print Report
           </button>
           <button onClick={clearAllData}
             style={{

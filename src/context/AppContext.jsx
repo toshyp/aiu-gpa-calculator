@@ -3,7 +3,7 @@ import programs from "../data/programs";
 import courses from "../data/courses";
 import prerequisites from "../data/prerequisites";
 import gradeScale from "../data/gradeScale";
-import { supabase, loadStudentData, saveStudentData, loadAdminData, saveAdminData } from "../lib/supabase";
+import { supabase, loadStudentData, saveStudentData, loadAdminData, saveAdminData, registerStudent, loginStudent, getAllStudents, getStudentDetails, deleteStudentAccount } from "../lib/supabase";
 
 const AppContext = createContext();
 
@@ -74,6 +74,9 @@ export function AppProvider({ children }) {
   const [courseOverrides, setCourseOverrides] = useState(loadCourseOverrides);
   const [dbReady, setDbReady] = useState(false);
   const [supabaseAvailable, setSupabaseAvailable] = useState(!!supabase);
+  const [allStudents, setAllStudents] = useState([]);
+  const [studentDetails, setStudentDetails] = useState(null);
+  const [loginError, setLoginError] = useState("");
   const saveTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -95,11 +98,17 @@ export function AppProvider({ children }) {
     localStorage.setItem("aiuCourseOverrides", JSON.stringify(courseOverrides));
   }, [courseOverrides]);
 
+  useEffect(() => {
+    if (!user) return;
+    saveUserData();
+  }, [grades, electiveSelections, ucSelections, ueSelections]);
+
   const loadFromDb = useCallback(async (studentId) => {
     if (!supabaseAvailable) return false;
     const data = await loadStudentData(studentId);
     if (data && !data.error) {
       if (data.grades) setGrades(data.grades);
+      if (data.electiveSelections) setElectiveSelections(data.electiveSelections);
       if (data.ucSlots) setUcSelections(data.ucSlots);
       if (data.ueSlots) setUeSelections(data.ueSlots);
       return true;
@@ -128,6 +137,9 @@ export function AppProvider({ children }) {
           data.overrides.forEach(o => { ov[o.code] = { name: o.name, credits: o.credits }; });
           setCourseOverrides(prev => ({ ...ov, ...prev }));
         }
+      }
+      if (data && data.error) {
+        setSupabaseAvailable(false);
       }
       setDbReady(true);
     });
@@ -163,15 +175,67 @@ export function AppProvider({ children }) {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       if (supabaseAvailable) {
-        saveStudentData(user, grades, ucSelections, ueSelections);
+        saveStudentData(user, grades, ucSelections, ueSelections, electiveSelections);
       }
     }, 2000);
   }
 
-  function login(userId) {
+  async function register(studentId, password) {
+    if (!supabase) return "Supabase is not configured";
+    const { data, error } = await registerStudent(studentId, password);
+    if (error) {
+      setSupabaseAvailable(false);
+      setUser(studentId);
+      setSelectedProgram(null);
+      setSelectedTrack(null);
+      setLoginError("");
+      return null;
+    }
+    setUser(studentId);
+    setSelectedProgram(null);
+    setSelectedTrack(null);
+    setLoginError("");
+    return null;
+  }
+
+  async function login(userId, password) {
+    if (supabaseAvailable && !userId.startsWith("admin_")) {
+      const { data, error } = await loginStudent(userId, password);
+      if (error || !data) {
+        if (error) {
+          setSupabaseAvailable(false);
+          setUser(userId);
+          setSelectedProgram(null);
+          setSelectedTrack(null);
+          setLoginError("");
+          return;
+        }
+        setLoginError("Invalid ID or password");
+        return;
+      }
+    }
     setUser(userId);
     setSelectedProgram(null);
     setSelectedTrack(null);
+    setLoginError("");
+  }
+
+  async function loadAllStudents() {
+    if (!supabaseAvailable) return;
+    const list = await getAllStudents();
+    setAllStudents(list);
+  }
+
+  async function viewStudentDetails(studentId) {
+    if (!supabaseAvailable) return;
+    const details = await getStudentDetails(studentId);
+    setStudentDetails({ studentId, ...details });
+  }
+
+  async function removeStudent(studentId) {
+    if (!supabaseAvailable) return;
+    await deleteStudentAccount(studentId);
+    loadAllStudents();
   }
 
   function logout() {
@@ -391,7 +455,8 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       user, adminAccount, setAdminAccount,
-      login, logout, selectedProgram, setSelectedProgram,
+      login, register, logout, loginError,
+      selectedProgram, setSelectedProgram,
       selectedTrack, setSelectedTrack,
       programs, courses,
       grades, getGrade, setGrade, saveUserData,
@@ -410,6 +475,9 @@ export function AppProvider({ children }) {
       addPrereq, removePrereq,
       courseOverrides, setCourseOverrides, getCourseName,
       dbReady, supabaseAvailable,
+      allStudents, loadAllStudents,
+      studentDetails, setStudentDetails, viewStudentDetails,
+      removeStudent,
     }}>
       {children}
     </AppContext.Provider>

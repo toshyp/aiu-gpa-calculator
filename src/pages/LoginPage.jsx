@@ -1,32 +1,47 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { LogIn, Shield, User, GraduationCap, BookOpen } from "lucide-react";
+import { LogIn, Shield, User, GraduationCap, BookOpen, UserPlus } from "lucide-react";
 
 export default function LoginPage() {
-  const { login, adminAccount } = useApp();
+  const { login, register, adminAccount, loginError } = useApp();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState("student");
+  const [subMode, setSubMode] = useState("signin");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    if (mode === "admin") {
-      if (userId === adminAccount.username && password === adminAccount.password) {
-        login("admin_" + userId);
+    try {
+      if (mode === "admin") {
+        if (userId === adminAccount.username && password === adminAccount.password) {
+          login("admin_" + userId, password);
+        } else {
+          setError("Invalid admin credentials");
+        }
       } else {
-        setError("Invalid admin credentials");
+        if (!userId.trim() || !password.trim()) {
+          setError("Please enter ID and password");
+          setLoading(false);
+          return;
+        }
+        if (subMode === "register") {
+          const err = await register(userId.trim(), password);
+          if (err) setError(err);
+        } else {
+          await login(userId.trim(), password);
+          if (loginError) setError(loginError);
+        }
       }
-    } else {
-      if (userId.trim()) {
-        login(userId.trim());
-      } else {
-        setError("Please enter your Student ID");
-      }
+    } catch (e) {
+      setError(e.message || "An error occurred");
     }
+    setLoading(false);
   }
 
   const inputStyle = (field) => ({
@@ -45,7 +60,6 @@ export default function LoginPage() {
       display: "flex", alignItems: "center", justifyContent: "center", padding: "20px",
       position: "relative", overflow: "hidden"
     }}>
-      {/* Decorative background elements */}
       <div style={{
         position: "absolute", top: "-20%", right: "-10%", width: "500px", height: "500px",
         borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)",
@@ -70,7 +84,6 @@ export default function LoginPage() {
         boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset",
         position: "relative", zIndex: 1
       }}>
-        {/* University Seal / Logo */}
         <div style={{ textAlign: "center", marginBottom: "36px" }}>
           <div style={{
             width: "80px", height: "80px", borderRadius: "20px",
@@ -109,7 +122,6 @@ export default function LoginPage() {
           }} />
         </div>
 
-        {/* Mode Toggle */}
         <div style={{
           display: "flex", background: "rgba(255,255,255,0.04)",
           borderRadius: "14px", padding: "5px", marginBottom: "28px",
@@ -145,6 +157,43 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {mode === "student" && (
+          <div style={{
+            display: "flex", background: "rgba(255,255,255,0.04)",
+            borderRadius: "10px", padding: "4px", marginBottom: "24px",
+            border: "1px solid rgba(255,255,255,0.05)"
+          }}>
+            <button onClick={() => { setSubMode("signin"); setError(""); }}
+              style={{
+                flex: 1, padding: "9px", border: "none", borderRadius: "8px",
+                cursor: "pointer", fontSize: "12px", fontWeight: 600,
+                background: subMode === "signin"
+                  ? "linear-gradient(135deg, #2563eb, #3b82f6)"
+                  : "transparent",
+                color: subMode === "signin" ? "white" : "rgba(148,163,184,0.6)",
+                transition: "all 0.25s ease",
+                boxShadow: subMode === "signin" ? "0 4px 16px rgba(59,130,246,0.3)" : "none"
+              }}>
+              <LogIn size={13} style={{ verticalAlign: "middle", marginRight: "4px" }} />
+              Sign In
+            </button>
+            <button onClick={() => { setSubMode("register"); setError(""); }}
+              style={{
+                flex: 1, padding: "9px", border: "none", borderRadius: "8px",
+                cursor: "pointer", fontSize: "12px", fontWeight: 600,
+                background: subMode === "register"
+                  ? "linear-gradient(135deg, #2563eb, #3b82f6)"
+                  : "transparent",
+                color: subMode === "register" ? "white" : "rgba(148,163,184,0.6)",
+                transition: "all 0.25s ease",
+                boxShadow: subMode === "register" ? "0 4px 16px rgba(59,130,246,0.3)" : "none"
+              }}>
+              <UserPlus size={13} style={{ verticalAlign: "middle", marginRight: "4px" }} />
+              Register
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: "18px", position: "relative" }}>
             <label style={{
@@ -173,34 +222,32 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {mode === "admin" && (
-            <div style={{ marginBottom: "18px", position: "relative" }}>
-              <label style={{
-                color: "rgba(148,163,184,0.7)", fontSize: "12px",
-                display: "block", marginBottom: "7px", fontWeight: 500,
-                letterSpacing: "0.3px", textTransform: "uppercase"
-              }}>
-                Password
-              </label>
-              <div style={{ position: "relative" }}>
-                <Shield size={16} style={{
-                  position: "absolute", left: "14px", top: "50%",
-                  transform: "translateY(-50%)",
-                  color: focusedField === "password" ? "#8b5cf6" : "rgba(148,163,184,0.4)",
-                  transition: "color 0.25s ease", pointerEvents: "none", zIndex: 1
-                }} />
-                <input
-                  type="password"
-                  value={password}
-                  onFocus={() => setFocusedField("password")}
-                  onBlur={() => setFocusedField(null)}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Admin password"
-                  style={inputStyle("password")}
-                />
-              </div>
+          <div style={{ marginBottom: "18px", position: "relative" }}>
+            <label style={{
+              color: "rgba(148,163,184,0.7)", fontSize: "12px",
+              display: "block", marginBottom: "7px", fontWeight: 500,
+              letterSpacing: "0.3px", textTransform: "uppercase"
+            }}>
+              Password
+            </label>
+            <div style={{ position: "relative" }}>
+              <Shield size={16} style={{
+                position: "absolute", left: "14px", top: "50%",
+                transform: "translateY(-50%)",
+                color: focusedField === "password" ? "#8b5cf6" : "rgba(148,163,184,0.4)",
+                transition: "color 0.25s ease", pointerEvents: "none", zIndex: 1
+              }} />
+              <input
+                type="password"
+                value={password}
+                onFocus={() => setFocusedField("password")}
+                onBlur={() => setFocusedField(null)}
+                onChange={e => setPassword(e.target.value)}
+                placeholder={mode === "admin" ? "Admin password" : (subMode === "register" ? "Create a password" : "Your password")}
+                style={inputStyle("password")}
+              />
             </div>
-          )}
+          </div>
 
           {error && (
             <div style={{
@@ -209,14 +256,14 @@ export default function LoginPage() {
               display: "flex", alignItems: "center", gap: "8px"
             }}>
               <span style={{ color: "#ef4444", fontSize: "12px" }}>⚠</span>
-              <p style={{ color: "#fca5a5", fontSize: "13px", margin: 0 }}>{error}</p>
+              <p style={{ color: "#fca5a5", fontSize: "13px", margin: 0 }}>{error || loginError}</p>
             </div>
           )}
 
-          <button type="submit" style={{
+          <button type="submit" disabled={loading} style={{
             width: "100%", padding: "15px", border: "none", borderRadius: "12px",
-            fontSize: "15px", fontWeight: 700, cursor: "pointer",
-            letterSpacing: "0.3px",
+            fontSize: "15px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer",
+            letterSpacing: "0.3px", opacity: loading ? 0.7 : 1,
             background: mode === "admin"
               ? "linear-gradient(135deg, #6d28d9, #8b5cf6)"
               : "linear-gradient(135deg, #1d4ed8, #3b82f6)",
@@ -227,11 +274,11 @@ export default function LoginPage() {
               ? "0 4px 20px rgba(139,92,246,0.35)"
               : "0 4px 20px rgba(59,130,246,0.35)",
           }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = mode === "admin" ? "0 6px 28px rgba(139,92,246,0.45)" : "0 6px 28px rgba(59,130,246,0.45)"; }}
+            onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = mode === "admin" ? "0 6px 28px rgba(139,92,246,0.45)" : "0 6px 28px rgba(59,130,246,0.45)"; } }}
             onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = mode === "admin" ? "0 4px 20px rgba(139,92,246,0.35)" : "0 4px 20px rgba(59,130,246,0.35)"; }}
           >
             <LogIn size={18} />
-            {mode === "student" ? "Sign In" : "Admin Login"}
+            {loading ? "Please wait..." : (mode === "admin" ? "Admin Login" : (subMode === "register" ? "Create Account" : "Sign In"))}
           </button>
 
           <div style={{
