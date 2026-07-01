@@ -1,0 +1,1042 @@
+import { useState, useMemo } from "react";
+import { useApp } from "../context/AppContext";
+import { gradeOptions } from "../data/gradeScale";
+import {
+  BookOpen, GraduationCap, BarChart3, Save, LogOut,
+  ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Trash2,
+  Target, TrendingUp, Sparkles, Layers, ArrowRight
+} from "lucide-react";
+
+export default function Dashboard() {
+  const {
+    user, logout, programs, courses,
+    selectedProgram, setSelectedProgram,
+    selectedTrack, setSelectedTrack,
+    getProgram, getTrack, getEffectiveCourses,
+    getCourseCredits, getGrade, setGrade,
+    calcCumulativeGPA, calcCompletedCredits, calcRemainingCredits,
+    grades, electiveSelections, selectElective, saveUserData,
+    ucSelections, selectUC, ueSelections, selectUE,
+    checkPrerequisites, clearAllData, getUcPool, getUePool
+  } = useApp();
+
+  const [activeSem, setActiveSem] = useState(1);
+  const [showResults, setShowResults] = useState(false);
+  const [showWhatIf, setShowWhatIf] = useState(false);
+  const [plannedInput, setPlannedInput] = useState("");
+  const [targetInput, setTargetInput] = useState("");
+  const [runAnalysis, setRunAnalysis] = useState(false);
+
+  const gradeScale = {
+    "A+": 4.0, "A": 4.0, "A-": 3.7,
+    "B+": 3.3, "B": 3.0, "B-": 2.7,
+    "C+": 2.3, "C": 2.0, "C-": 1.7,
+    "D+": 1.3, "D": 1.0, "D-": 0.7,
+    "F": 0.0,
+  };
+
+  function whatIfAnalysis() {
+    const planned = parseFloat(plannedInput);
+    const target = parseFloat(targetInput);
+    if (!planned || planned < 1 || planned > 30 || !target || target < 0 || target > 4.0) {
+      return { error: "Enter valid values (hours 1-30, GPA 0-4)" };
+    }
+
+    const curGPA = cumGPA;
+    const curCredits = completedCredits;
+    const curPoints = curGPA * curCredits;
+    const totalAfter = curCredits + planned;
+    const maxPoints = curPoints + 4.0 * planned;
+    const maxGPA = maxPoints / totalAfter;
+
+    if (target > maxGPA) {
+      const shortfall = target * totalAfter - maxPoints;
+      const extraCredits = Math.ceil(shortfall / (4.0 - target));
+      return {
+        achievable: false, maxGPA, extraCredits, planned, target,
+        curGPA, curCredits,
+      };
+    }
+
+    const neededPoints = target * totalAfter - curPoints;
+    const neededAvg = neededPoints / planned;
+    const numCourses = Math.max(1, Math.round(planned / 3));
+    const chPerCourse = planned / numCourses;
+
+    function calcGPA(avg) {
+      return (curPoints + avg * planned) / totalAfter;
+    }
+
+    const sols = [];
+    const seen = new Set();
+
+    function addSolution(desc, grade, val, gpa) {
+      const key = Math.round(gpa * 100);
+      if (!seen.has(key)) {
+        seen.add(key);
+        sols.push({ desc, grade, val, newGPA: gpa });
+      }
+    }
+
+    // 1. Best case
+    addSolution("Best: A+ in all courses", "A+", 4.0, calcGPA(4.0));
+
+    // 2. Minimum uniform grade that meets target
+    const gradeList = [
+      ["A+", 4.0], ["A", 4.0], ["A-", 3.7],
+      ["B+", 3.3], ["B", 3.0], ["B-", 2.7],
+      ["C+", 2.3], ["C", 2.0], ["C-", 1.7],
+      ["D+", 1.3], ["D", 1.0],
+    ];
+    const minGrade = gradeList.find(g => calcGPA(g[1]) >= target);
+    if (minGrade) {
+      addSolution(
+        `${minGrade[0]} in all courses — minimum grade to reach target`,
+        minGrade[0], minGrade[1], calcGPA(minGrade[1])
+      );
+    }
+
+    // 3-10. Mixed combinations
+    const highGrades = [4.0, 3.7, 3.3, 3.0];
+    const lowGrades = [3.3, 3.0, 2.7, 2.3, 2.0, 1.7];
+
+    for (const high of highGrades) {
+      for (const low of lowGrades) {
+        if (high <= low) continue;
+        for (let x = 1; x < numCourses; x++) {
+          const y = numCourses - x;
+          const avg = (high * x + low * y) / numCourses;
+          const gpa = calcGPA(avg);
+          if (gpa >= target) {
+            const hLabel = gradeList.find(g => g[1] === high)?.[0] || "A";
+            const lLabel = gradeList.find(g => g[1] === low)?.[0] || "C";
+            addSolution(`${hLabel} in ${x} courses, ${lLabel} in ${y} courses`, avg.toFixed(2), avg, gpa);
+          }
+        }
+      }
+    }
+
+    // Try all same intermediate grades
+    for (const [name, val] of gradeList) {
+      const gpa = calcGPA(val);
+      if (gpa >= target) {
+        addSolution(`${name} in all courses`, name, val, gpa);
+      }
+    }
+
+    sols.sort((a, b) => b.newGPA - a.newGPA);
+    return {
+      achievable: true, maxGPA, planned, target,
+      curGPA, curCredits, neededAvg,
+      solutions: sols.slice(0, 10),
+    };
+  }
+
+  const prog = getProgram();
+  const track = getTrack();
+  const effectiveCourses = getEffectiveCourses();
+
+  const cumGPA = useMemo(() => calcCumulativeGPA(), [effectiveCourses]);
+  const completedCredits = useMemo(() => calcCompletedCredits(), [effectiveCourses]);
+  const remainingCredits = useMemo(() => calcRemainingCredits(), [effectiveCourses]);
+
+  const analysisResult = runAnalysis ? whatIfAnalysis() : null;
+
+  const semesters = track ? track.semesters : prog?.semesters || [];
+
+  const techElectPools = track ? track.techElectPools : prog?.techElectPools || {};
+  const ucSlots = track ? track.ucSlots : prog?.ucSlots || 0;
+  const ueSlots = track ? track.ueSlots : prog?.ueSlots || 0;
+
+  const semCourses = semesters.find(s => s.number === activeSem);
+  const semTypes = semCourses ? semCourses.type || [] : [];
+
+  function getSemesterCourses(semNum) {
+    const sem = semesters.find(s => s.number === semNum);
+    if (!sem) return [];
+    return sem.courses.map((code, idx) => {
+      const type = sem.type ? sem.type[idx] || "mandatory" : "mandatory";
+      let actualCode = code;
+      if (type === "elective" && electiveSelections[code]) actualCode = electiveSelections[code];
+      if (type === "university-requirement" && ucSelections[code]) actualCode = ucSelections[code];
+      if (type === "university-elective" && ueSelections[code]) actualCode = ueSelections[code];
+      const prereq = checkPrerequisites(actualCode);
+      return { slot: code, code: actualCode, type, prereq };
+    });
+  }
+
+  function calcSemGPA(semNum) {
+    const courseList = getSemesterCourses(semNum);
+    let pts = 0, crs = 0;
+    courseList.forEach(({ code }) => {
+      const g = getGrade(code);
+      const scale = { "A+":4,"A":4,"A-":3.7,"B+":3.3,"B":3,"B-":2.7,"C+":2.3,"C":2,"C-":1.7,"D+":1.3,"D":1,"D-":0.7,"F":0 };
+      const p = scale[g];
+      const c = getCourseCredits(code);
+      if (p !== undefined) { pts += p * c; crs += c; }
+    });
+    return crs > 0 ? (pts / crs).toFixed(2) : "—";
+  }
+
+  const univReqPool = getUcPool();
+  const univElectPool = getUePool();
+
+  const cardColors = ["#3b82f6", "#8b5cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ec4899"];
+
+  if (!prog) {
+    return (
+      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
+        <div style={{ maxWidth: "960px", margin: "0 auto", paddingTop: "32px" }}>
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{
+                width: "44px", height: "44px", borderRadius: "12px",
+                background: "linear-gradient(135deg, #1e40af, #7c3aed)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 4px 16px rgba(59,130,246,0.3)"
+              }}>
+                <span style={{ color: "white", fontSize: "16px", fontWeight: 800, fontStyle: "italic" }}>AIU</span>
+              </div>
+              <div>
+                <h1 style={{ color: "white", fontSize: "20px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
+                  GPA Calculator
+                </h1>
+                <p style={{ color: "rgba(148,163,184,0.6)", fontSize: "12px", margin: "2px 0 0" }}>
+                  Faculty of Computer Science & Engineering
+                </p>
+              </div>
+            </div>
+            <button onClick={logout} style={{
+              padding: "9px 18px", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "10px", background: "rgba(255,255,255,0.04)", color: "rgba(148,163,184,0.7)",
+              cursor: "pointer", fontSize: "13px", fontWeight: 500,
+              display: "flex", alignItems: "center", gap: "7px",
+              transition: "all 0.2s"
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(148,163,184,0.7)"; }}
+            ><LogOut size={15} /> Logout</button>
+          </div>
+
+          {/* Title */}
+          <div style={{ marginBottom: "28px" }}>
+            <h2 style={{ color: "white", fontSize: "22px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.3px" }}>
+              Select Your Program
+            </h2>
+            <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "13px", margin: 0 }}>
+              Choose your program to view your study plan and calculate your GPA
+            </p>
+          </div>
+
+          {/* Program Cards Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: "16px" }}>
+            {Object.values(programs).map((p, idx) => {
+              const accent = cardColors[idx % cardColors.length];
+              const isTracked = p.hasTracks;
+              return (
+                <div key={p.id} onClick={() => { setSelectedProgram(p.id); setSelectedTrack(null); }}
+                  style={{
+                    background: "rgba(255,255,255,0.03)", borderRadius: "18px", padding: "28px 24px 24px",
+                    border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    position: "relative", overflow: "hidden"
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                    e.currentTarget.style.borderColor = accent;
+                    e.currentTarget.style.boxShadow = `0 12px 40px rgba(0,0,0,0.3), 0 0 0 1px ${accent}22 inset`;
+                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                  }}
+                >
+                  {/* Top accent bar */}
+                  <div style={{
+                    position: "absolute", top: 0, left: 0, right: 0, height: "3px",
+                    background: `linear-gradient(90deg, ${accent}, ${accent}88)`,
+                    borderRadius: "18px 18px 0 0"
+                  }} />
+                  <GraduationCap size={32} color={accent} style={{ marginBottom: "14px", opacity: 0.9 }} />
+                  <h3 style={{ color: "white", fontSize: "17px", fontWeight: 600, margin: "0 0 6px" }}>{p.name}</h3>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                    <span style={{
+                      padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
+                      background: `${accent}18`, color: accent
+                    }}>
+                      {p.totalCredits} CR HRS
+                    </span>
+                    {isTracked && <span style={{
+                      padding: "3px 10px", borderRadius: "6px", fontSize: "11px", fontWeight: 500,
+                      background: "rgba(255,255,255,0.05)", color: "rgba(148,163,184,0.6)"
+                    }}>
+                      <Layers size={11} style={{ verticalAlign: "middle", marginRight: "3px" }} />
+                      Tracks
+                    </span>}
+                  </div>
+                  <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", margin: 0 }}>
+                    {p.department}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (prog.hasTracks && !track) {
+    return (
+      <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
+        <div style={{ maxWidth: "680px", margin: "0 auto", paddingTop: "32px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
+            <div>
+              <button onClick={() => { setSelectedProgram(null); setSelectedTrack(null); }}
+                style={{
+                  color: "rgba(148,163,184,0.5)", background: "none", border: "none",
+                  cursor: "pointer", fontSize: "13px", marginBottom: "12px", padding: 0,
+                  display: "flex", alignItems: "center", gap: "6px",
+                  transition: "color 0.2s"
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = "#3b82f6"}
+                onMouseLeave={e => e.currentTarget.style.color = "rgba(148,163,184,0.5)"}
+              >
+                ← Back to Programs
+              </button>
+              <h1 style={{ color: "white", fontSize: "24px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
+                {prog.name}
+              </h1>
+              <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "13px", margin: "4px 0 0" }}>
+                Select your specialization track
+              </p>
+            </div>
+            <button onClick={logout} style={{
+              padding: "9px 18px", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "10px", background: "rgba(255,255,255,0.04)", color: "rgba(148,163,184,0.7)",
+              cursor: "pointer", fontSize: "13px", display: "flex", alignItems: "center", gap: "7px",
+              transition: "all 0.2s"
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(148,163,184,0.7)"; }}
+            ><LogOut size={15} /></button>
+          </div>
+
+          <div style={{ display: "grid", gap: "12px" }}>
+            {Object.values(prog.tracks).map((t, idx) => {
+              const accent = cardColors[idx % cardColors.length];
+              return (
+                <div key={t.id} onClick={() => setSelectedTrack(t.id)}
+                  style={{
+                    background: "rgba(255,255,255,0.03)", borderRadius: "16px", padding: "22px 24px",
+                    border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = "translateX(4px)";
+                    e.currentTarget.style.borderColor = accent;
+                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = "translateX(0)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                  }}
+                >
+                  <div>
+                    <h3 style={{ color: "white", fontSize: "16px", fontWeight: 600, margin: "0 0 4px" }}>
+                      {t.name}
+                    </h3>
+                    <span style={{
+                      padding: "2px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
+                      background: `${accent}18`, color: accent
+                    }}>
+                      {t.totalCredits} CR HRS
+                    </span>
+                  </div>
+                  <ArrowRight size={20} color="rgba(148,163,184,0.3)" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const trackOrProg = track || prog;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)" }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "20px" }}>
+        {/* Header */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          marginBottom: "24px", flexWrap: "wrap", gap: "12px"
+        }}>
+          <div>
+            <button onClick={() => { prog?.hasTracks ? setSelectedTrack(null) : setSelectedProgram(null); }}
+              style={{
+                color: "rgba(148,163,184,0.5)", background: "none", border: "none",
+                cursor: "pointer", fontSize: "13px", marginBottom: "6px", padding: 0,
+                display: "flex", alignItems: "center", gap: "6px",
+                transition: "color 0.2s"
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = "#3b82f6"}
+              onMouseLeave={e => e.currentTarget.style.color = "rgba(148,163,184,0.5)"}
+            >
+              ← Change Track / Program
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "10px",
+                background: "linear-gradient(135deg, #1e40af, #7c3aed)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 3px 12px rgba(59,130,246,0.25)"
+              }}>
+                <span style={{ color: "white", fontSize: "13px", fontWeight: 800, fontStyle: "italic" }}>AIU</span>
+              </div>
+              <div>
+                <h1 style={{ color: "white", fontSize: "20px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
+                  {prog.name}{track ? ` — ${track.name}` : ""}
+                </h1>
+                <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", margin: "2px 0 0" }}>
+                  Student: <span style={{ color: "rgba(148,163,184,0.7)" }}>{user}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button onClick={() => { saveUserData(); alert("Data saved!"); }}
+              style={{
+                padding: "10px 20px", border: "none", borderRadius: "10px",
+                background: "linear-gradient(135deg, #1d4ed8, #3b82f6)", color: "white", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600,
+                boxShadow: "0 4px 16px rgba(59,130,246,0.3)",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(59,130,246,0.4)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(59,130,246,0.3)"; }}
+            ><Save size={15} /> Save</button>
+            <button onClick={logout} style={{
+              padding: "10px", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "10px", background: "rgba(255,255,255,0.04)", color: "rgba(148,163,184,0.6)", cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(148,163,184,0.6)"; }}
+            ><LogOut size={16} /></button>
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: "12px", marginBottom: "28px"
+        }}>
+          {[
+            { label: "Total CR HRS", value: trackOrProg.totalCredits, color: "#3b82f6", icon: "📚" },
+            { label: "Completed", value: completedCredits, color: "#22c55e", icon: "✅" },
+            { label: "Remaining", value: remainingCredits, color: remainingCredits > 0 ? "#f59e0b" : "#22c55e", icon: remainingCredits > 0 ? "📋" : "✅" },
+            { label: "CGPA", value: showResults ? cumGPA.toFixed(2) : "—", color: "#8b5cf6", icon: "🎯" },
+          ].map(card => (
+            <div key={card.label} style={{
+              background: `linear-gradient(135deg, ${card.color}08, ${card.color}03)`,
+              borderRadius: "16px", padding: "20px",
+              border: `1px solid ${card.color}15`,
+              transition: "all 0.2s"
+            }}>
+              <p style={{
+                color: "rgba(148,163,184,0.6)", fontSize: "11px", margin: "0 0 10px",
+                fontWeight: 500, letterSpacing: "0.5px", textTransform: "uppercase"
+              }}>
+                {card.icon} {card.label}
+              </p>
+              <p style={{ color: card.color, fontSize: "30px", fontWeight: 700, margin: 0, letterSpacing: "-1px" }}>
+                {card.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Semester Tabs */}
+        <div style={{
+          display: "flex", gap: "6px", marginBottom: "16px",
+          overflowX: "auto", flexWrap: "wrap"
+        }}>
+          {semesters.map(sem => (
+            <button key={sem.number} onClick={() => setActiveSem(sem.number)}
+              style={{
+                padding: "9px 18px", border: "none", borderRadius: "10px", cursor: "pointer",
+                fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap",
+                background: activeSem === sem.number
+                  ? "linear-gradient(135deg, #2563eb, #3b82f6)"
+                  : "rgba(255,255,255,0.04)",
+                color: activeSem === sem.number ? "white" : "rgba(148,163,184,0.6)",
+                transition: "all 0.2s",
+                boxShadow: activeSem === sem.number ? "0 4px 12px rgba(59,130,246,0.25)" : "none"
+              }}>
+              Semester {sem.number}
+            </button>
+          ))}
+        </div>
+
+        {/* Courses Table */}
+        <div style={{
+          background: "rgba(255,255,255,0.02)", borderRadius: "18px",
+          border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden", marginBottom: "16px"
+        }}>
+          <div style={{
+            padding: "18px 22px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+            display: "flex", justifyContent: "space-between", alignItems: "center"
+          }}>
+            <h3 style={{ color: "white", fontSize: "15px", fontWeight: 600, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <BookOpen size={16} color="#3b82f6" />
+              Semester {activeSem} — GPA: <span style={{ color: "#8b5cf6" }}>{calcSemGPA(activeSem)}</span>
+            </h3>
+            <span style={{ color: "rgba(148,163,184,0.3)", fontSize: "11px" }}>
+              {semCourses ? semCourses.courses.length : 0} courses
+            </span>
+          </div>
+          {semCourses && getSemesterCourses(activeSem).map((item, idx) => {
+            const cr = getCourseCredits(item.code);
+            const grade = getGrade(item.code);
+            const isElective = item.type === "elective";
+            const isUC = item.type === "university-requirement";
+            const isUE = item.type === "university-elective";
+            const isField = item.type === "field-training";
+            const isGradProj = item.type === "graduation-project";
+            const poolKey = item.slot;
+
+            let badgeColor = "#3b82f6";
+            if (isUC) badgeColor = "#8b5cf6";
+            if (isUE) badgeColor = "#ec4899";
+            if (isField) badgeColor = "#22c55e";
+            if (isGradProj) badgeColor = "#f59e0b";
+            if (isElective) badgeColor = "#06b6d4";
+
+            return (
+              <div key={item.slot} style={{
+                padding: "14px 22px",
+                borderBottom: idx < semCourses.courses.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap",
+                transition: "background 0.2s"
+              }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.015)"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                {/* Type Badge */}
+                <span style={{
+                  padding: "3px 10px", borderRadius: "6px", fontSize: "10px", fontWeight: 700,
+                  background: badgeColor + "18", color: badgeColor, whiteSpace: "nowrap",
+                  letterSpacing: "0.5px", minWidth: "32px", textAlign: "center"
+                }}>
+                  {item.type === "university-requirement" ? "UC" :
+                   item.type === "university-elective" ? "UE" :
+                   item.type === "field-training" ? "FT" :
+                   item.type === "graduation-project" ? "GP" :
+                   item.type === "elective" ? "TE" : "CR"}
+                </span>
+
+                {/* Prerequisite Warning */}
+                {!item.prereq.met && (
+                  <span title={"Missing: " + item.prereq.missing.join(", ")}
+                    style={{ display: "flex", cursor: "help" }}>
+                    <AlertTriangle size={14} color="#f59e0b" />
+                  </span>
+                )}
+
+                {/* Course Info */}
+                <div style={{ flex: 1, minWidth: "120px" }}>
+                  <p style={{ color: "white", fontSize: "13px", margin: 0, fontWeight: 500 }}>
+                    {item.code}
+                  </p>
+                  <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", margin: "1px 0 0" }}>
+                    {courses[item.code]?.name || item.code}
+                  </p>
+                </div>
+
+                {/* Credits */}
+                <span style={{ color: "rgba(148,163,184,0.4)", fontSize: "12px", fontWeight: 600, minWidth: "36px" }}>
+                  {cr} CH
+                </span>
+
+                {/* Elective Selector */}
+                {(isElective || isUC || isUE) && (
+                  <select
+                    value={item.code}
+                    onChange={e => {
+                      if (isElective) selectElective(item.slot, e.target.value);
+                      if (isUC) selectUC(item.slot, e.target.value);
+                      if (isUE) selectUE(item.slot, e.target.value);
+                    }}
+                    style={{
+                      padding: "7px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)",
+                      background: "rgba(255,255,255,0.04)", color: "white", fontSize: "12px",
+                      maxWidth: "190px", cursor: "pointer",
+                      transition: "border-color 0.2s"
+                    }}
+                  >
+                    <option value={item.slot} style={{ background: "#1e293b" }}>
+                      — Select Course —
+                    </option>
+                    {(() => {
+                      let pool = [];
+                      if (isElective) pool = techElectPools[poolKey] || [];
+                      if (isUC) {
+                        const selectedElsewhere = Object.entries(ucSelections)
+                          .filter(([s]) => s !== item.slot)
+                          .map(([, v]) => v);
+                        pool = univReqPool.map(c => c.code).filter(c => !selectedElsewhere.includes(c));
+                      }
+                      if (isUE) {
+                        const selectedElsewhere = Object.entries(ueSelections)
+                          .filter(([s]) => s !== item.slot)
+                          .map(([, v]) => v);
+                        pool = univElectPool.map(c => c.code).filter(c => !selectedElsewhere.includes(c));
+                      }
+                      return pool.map(cCode => (
+                        <option key={cCode} value={cCode} style={{ background: "#1e293b" }}>
+                          {cCode} — {courses[cCode]?.name || cCode}
+                        </option>
+                      ));
+                    })()}
+                  </select>
+                )}
+
+                {/* Grade Selector */}
+                <select
+                  value={grade}
+                  onChange={e => setGrade(item.code, e.target.value)}
+                  style={{
+                    padding: "7px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)",
+                    background: grade ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.04)",
+                    color: grade ? "#22c55e" : "rgba(148,163,184,0.6)", fontSize: "12px", fontWeight: 700,
+                    cursor: "pointer", minWidth: "70px",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <option value="" style={{ background: "#1e293b" }}>—</option>
+                  {gradeOptions.map(g => (
+                    <option key={g} value={g} style={{ background: "#1e293b" }}>{g}</option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Calculate Button */}
+        <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
+          <button onClick={() => setShowResults(true)}
+            style={{
+              padding: "14px 32px", border: "none", borderRadius: "12px",
+              background: "linear-gradient(135deg, #6d28d9, #8b5cf6)",
+              color: "white", fontSize: "15px", fontWeight: 700, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: "8px",
+              boxShadow: "0 4px 20px rgba(139,92,246,0.35)",
+              transition: "all 0.2s"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 28px rgba(139,92,246,0.45)"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(139,92,246,0.35)"; }}
+          >
+            <BarChart3 size={18} /> Calculate GPA
+          </button>
+          <button onClick={clearAllData}
+            style={{
+              padding: "14px 24px", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "12px",
+              background: "rgba(239,68,68,0.06)", color: "#ef4444",
+              fontSize: "14px", fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: "8px",
+              transition: "all 0.2s"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
+          >
+            <Trash2 size={16} /> Clear All
+          </button>
+        </div>
+
+        {/* GPA Results */}
+        {showResults && (
+          <div style={{
+            background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.04))",
+            borderRadius: "18px",
+            border: "1px solid rgba(139,92,246,0.15)", padding: "28px", marginBottom: "20px"
+          }}>
+            <h3 style={{ color: "white", fontSize: "17px", fontWeight: 600, margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <CheckCircle size={20} color="#8b5cf6" /> GPA Results
+            </h3>
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "24px"
+            }}>
+              <div style={{ textAlign: "center", padding: "24px", background: "rgba(255,255,255,0.03)", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <p style={{ color: "rgba(148,163,184,0.6)", fontSize: "11px", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "1px" }}>Cumulative GPA</p>
+                <p style={{
+                  color: cumGPA >= 3.5 ? "#22c55e" : cumGPA >= 2.5 ? "#f59e0b" : "#ef4444",
+                  fontSize: "42px", fontWeight: 700, margin: 0, letterSpacing: "-2px"
+                }}>{cumGPA.toFixed(2)}</p>
+                <p style={{ color: "rgba(148,163,184,0.4)", fontSize: "12px", margin: "4px 0 0" }}>/ 4.0</p>
+              </div>
+              <div style={{ textAlign: "center", padding: "24px", background: "rgba(255,255,255,0.03)", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <p style={{ color: "rgba(148,163,184,0.6)", fontSize: "11px", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "1px" }}>Completed Credits</p>
+                <p style={{ color: "#22c55e", fontSize: "42px", fontWeight: 700, margin: 0, letterSpacing: "-2px" }}>{completedCredits}</p>
+                <p style={{ color: "rgba(148,163,184,0.4)", fontSize: "12px", margin: "4px 0 0" }}>/ {trackOrProg.totalCredits}</p>
+              </div>
+            </div>
+
+            {/* Per-semester breakdown */}
+            <h4 style={{ color: "rgba(148,163,184,0.6)", fontSize: "13px", fontWeight: 600, margin: "0 0 14px" }}>Semester Breakdown</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "10px" }}>
+              {semesters.map(sem => (
+                <div key={sem.number} style={{
+                  padding: "14px 10px", background: "rgba(255,255,255,0.03)", borderRadius: "10px", textAlign: "center",
+                  border: "1px solid rgba(255,255,255,0.04)"
+                }}>
+                  <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "11px", margin: "0 0 6px", fontWeight: 500 }}>Sem {sem.number}</p>
+                  <p style={{ color: "white", fontSize: "18px", fontWeight: 700, margin: 0 }}>
+                    {calcSemGPA(sem.number)}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Completed Courses List */}
+            <h4 style={{ color: "rgba(148,163,184,0.6)", fontSize: "13px", fontWeight: 600, margin: "20px 0 12px" }}>Completed Courses</h4>
+            <div style={{ display: "grid", gap: "6px" }}>
+              {effectiveCourses
+                .filter(({ code }) => getGrade(code) && getGrade(code) !== "F")
+                .map(({ code, semester }) => (
+                  <div key={code + semester} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "10px 14px", background: "rgba(255,255,255,0.03)", borderRadius: "10px",
+                    border: "1px solid rgba(255,255,255,0.04)"
+                  }}>
+                    <div>
+                      <span style={{ color: "white", fontSize: "13px", fontWeight: 500 }}>{code}</span>
+                      <span style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", marginLeft: "8px" }}>
+                        {courses[code]?.name || ""}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ color: "rgba(148,163,184,0.4)", fontSize: "12px" }}>
+                        Sem {semester} · {getCourseCredits(code)} CH
+                      </span>
+                      <span style={{
+                        padding: "2px 10px", borderRadius: "6px",
+                        color: "#22c55e", fontSize: "12px", fontWeight: 700,
+                        background: "rgba(34,197,94,0.1)"
+                      }}>
+                        {getGrade(code)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* What-If Analysis */}
+        <div style={{ marginTop: "0" }}>
+          <button onClick={() => setShowWhatIf(!showWhatIf)}
+            style={{
+              padding: "14px 22px", border: "none", borderRadius: "14px",
+              background: showWhatIf ? "rgba(59,130,246,0.12)" : "rgba(59,130,246,0.06)",
+              color: "#60a5fa", fontSize: "14px", fontWeight: 600, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: "8px", width: "100%",
+              transition: "all 0.25s ease",
+              border: showWhatIf ? "1px solid rgba(59,130,246,0.2)" : "1px solid transparent",
+            }}>
+              <Target size={18} />
+              <span style={{ flex: 1, textAlign: "right" }}>What-If Analysis: How to reach a target CGPA?</span>
+              {showWhatIf ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+
+          {showWhatIf && (
+            <div style={{
+              marginTop: "12px", padding: "20px", borderRadius: "16px",
+              background: "rgba(59,130,246,0.05)",
+              border: "1px solid rgba(59,130,246,0.15)",
+            }}>
+              <p style={{ color: "#94a3b8", fontSize: "13px", margin: "0 0 16px" }}>
+                Current CGPA: <strong style={{ color: "white" }}>{cumGPA.toFixed(2)}</strong>
+                {" | "}Completed Credits: <strong style={{ color: "white" }}>{completedCredits}</strong>
+              </p>
+
+              <div style={{ display: "flex", gap: "12px", marginBottom: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
+                <div style={{ flex: 1, minWidth: "120px" }}>
+                  <label style={{ color: "#94a3b8", fontSize: "12px", display: "block", marginBottom: "6px" }}>
+                    Planned credits next semester?
+                  </label>
+                  <input type="number" min="1" max="30" value={plannedInput}
+                    onChange={e => { setPlannedInput(e.target.value); setRunAnalysis(false); }}
+                    placeholder="e.g. 9"
+                    style={{
+                      width: "100%", padding: "10px 14px", borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.05)", color: "white",
+                      fontSize: "14px", outline: "none", boxSizing: "border-box",
+                    }} />
+                </div>
+                <div style={{ flex: 1, minWidth: "120px" }}>
+                  <label style={{ color: "#94a3b8", fontSize: "12px", display: "block", marginBottom: "6px" }}>
+                    Target CGPA?
+                  </label>
+                  <input type="number" step="0.1" min="0" max="4" value={targetInput}
+                    onChange={e => { setTargetInput(e.target.value); setRunAnalysis(false); }}
+                    placeholder="e.g. 2.0"
+                    style={{
+                      width: "100%", padding: "10px 14px", borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.05)", color: "white",
+                      fontSize: "14px", outline: "none", boxSizing: "border-box",
+                    }} />
+                </div>
+                <button onClick={() => setRunAnalysis(true)}
+                  style={{
+                    padding: "10px 24px", border: "none", borderRadius: "10px",
+                    background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                    color: "white", fontSize: "14px", fontWeight: 600,
+                    cursor: "pointer", display: "flex", alignItems: "center", gap: "6px",
+                    whiteSpace: "nowrap",
+                  }}>
+                  <BarChart3 size={16} /> Analyze
+                </button>
+              </div>
+
+              {analysisResult && analysisResult.error && (
+                <div style={{ padding: "12px", background: "rgba(239,68,68,0.1)", borderRadius: "10px", color: "#ef4444", fontSize: "13px" }}>
+                  {analysisResult.error}
+                </div>
+              )}
+
+              {analysisResult && !analysisResult.error && !analysisResult.achievable && (
+                <div>
+                  <div style={{
+                    padding: "16px", background: "rgba(239,68,68,0.1)", borderRadius: "12px",
+                    border: "1px solid rgba(239,68,68,0.2)", marginBottom: "16px",
+                  }}>
+                    <p style={{ color: "#f87171", fontSize: "14px", fontWeight: 600, margin: "0 0 8px" }}>
+                      ❌ Cannot reach {analysisResult.target.toFixed(1)} with only {analysisResult.planned} credits
+                    </p>
+                    <p style={{ color: "#94a3b8", fontSize: "13px", margin: "0 0 4px" }}>
+                      Max CGPA achievable with {analysisResult.planned} credits: <strong style={{ color: "#fbbf24" }}>{analysisResult.maxGPA.toFixed(3)}</strong>
+                    </p>
+                    <p style={{ color: "#94a3b8", fontSize: "13px", margin: 0 }}>
+                      To reach {analysisResult.target.toFixed(1)}, you need <strong style={{ color: "#fbbf24" }}>{analysisResult.extraCredits}</strong> additional credits (total {analysisResult.planned + analysisResult.extraCredits} credits) all at A+
+                    </p>
+                  </div>
+                  {/* Also show best achievable with current planned */}
+                  <div style={{
+                    padding: "16px", background: "rgba(59,130,246,0.08)", borderRadius: "12px",
+                    border: "1px solid rgba(59,130,246,0.15)",
+                  }}>
+                    <p style={{ color: "#60a5fa", fontSize: "14px", fontWeight: 600, margin: "0 0 12px" }}>
+                      🎯 Improvement plans within {analysisResult.planned} credit hours:
+                    </p>
+                    {(() => {
+                      const budget = analysisResult.planned;
+                      const cp = cumGPA * completedCredits;
+
+                      // Get student's courses with grades, sorted worst-first
+                      const allLow = Object.entries(grades)
+                        .filter(([code, g]) => g && g !== "" && courses[code])
+                        .map(([code, g]) => ({
+                          code, name: courses[code]?.name || code,
+                          grade: g, credits: getCourseCredits(code),
+                          points: gradeScale[g] || 0,
+                        }))
+                        .filter(c => c.credits > 0 && c.points < 4.0)
+                        .sort((a, b) => a.points - b.points);
+
+                      if (allLow.length === 0) {
+                        return <p style={{ color: "#64748b", fontSize: "13px" }}>No courses to improve.</p>;
+                      }
+
+                      const targets = [
+                        ["A", 4.0], ["A-", 3.7], ["B+", 3.3],
+                        ["B", 3.0], ["B-", 2.7],
+                      ];
+
+                      function calcGPA(changes) {
+                        let pts = cp;
+                        for (const ch of changes) pts = pts - ch.oldPts * ch.cr + ch.newPts * ch.cr;
+                        return completedCredits > 0 ? pts / completedCredits : 0;
+                      }
+
+                      const plans = [];
+                      const seen = new Set();
+
+                      // ---- Single-course plans ----
+                      for (const c of allLow) {
+                        if (c.credits > budget) continue;
+                        for (const [gName, gVal] of targets) {
+                          if (gVal <= c.points) continue;
+                          const gpa = calcGPA([{ oldPts: c.points, newPts: gVal, cr: c.credits }]);
+                          const k = Math.round(gpa * 100);
+                          if (!seen.has(k)) { seen.add(k);
+                            plans.push({ courses: [{ ...c, from: c.grade, to: gName }], totalCr: c.credits, gpa });
+                          }
+                        }
+                      }
+
+                      // ---- Multi-course combos within budget ----
+                      const topN = allLow.slice(0, 6);
+                      function combos(arr, start, cur) {
+                        const res = [];
+                        const sum = cur.reduce((s, x) => s + x.credits, 0);
+                        if (cur.length >= 2 && sum <= budget) res.push([...cur]);
+                        for (let i = start; i < arr.length; i++) {
+                          if (sum + arr[i].credits <= budget) res.push(...combos(arr, i + 1, [...cur, arr[i]]));
+                        }
+                        return res;
+                      }
+                      const courseCombos = combos(topN, 0, []);
+                      for (const combo of courseCombos.slice(0, 30)) {
+                        for (const [gName, gVal] of targets.slice(0, 3)) {
+                          const changes = combo.map(c => ({ oldPts: c.points, newPts: Math.max(gVal, c.points), cr: c.credits }));
+                          const gpa = calcGPA(changes);
+                          const k = Math.round(gpa * 100);
+                          if (gpa > cumGPA + 0.001 && !seen.has(k)) { seen.add(k);
+                            plans.push({
+                              courses: combo.map(c => ({ ...c, from: c.grade, to: gName })),
+                              totalCr: combo.reduce((s, c) => s + c.credits, 0),
+                              gpa,
+                            });
+                          }
+                        }
+                      }
+
+                      plans.sort((a, b) => b.gpa - a.gpa);
+                      if (plans.length === 0) return <p style={{ color: "#64748b", fontSize: "13px" }}>No improvement plans fit within {budget} credits.</p>;
+                      return plans.slice(0, 8).map((plan, i) => (
+                        <div key={i} style={{
+                          padding: "10px 14px", marginBottom: "6px",
+                          background: "rgba(255,255,255,0.03)", borderRadius: "10px",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                            <span style={{ color: "#94a3b8", fontSize: "11px", fontWeight: 600 }}>Plan {i + 1}</span>
+                            <span style={{ color: "#64748b", fontSize: "11px" }}>{plan.totalCr} CH used</span>
+                          </div>
+                          {plan.courses.map((c, j) => (
+                            <div key={j} style={{
+                              display: "flex", justifyContent: "space-between", alignItems: "center",
+                              padding: "4px 0", borderTop: j > 0 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                            }}>
+                              <div style={{ flex: 1 }}>
+                                <span style={{ color: "white", fontSize: "12px", fontWeight: 500 }}>{c.code}</span>
+                                <span style={{ color: "#64748b", fontSize: "11px", marginLeft: "6px" }}>{c.name}</span>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ color: "#ef4444", fontSize: "12px", fontWeight: 600 }}>{c.from}</span>
+                                <span style={{ color: "#64748b", fontSize: "11px" }}>→</span>
+                                <span style={{ color: "#22c55e", fontSize: "12px", fontWeight: 600 }}>{c.to}</span>
+                                <span style={{ color: "#64748b", fontSize: "11px", marginLeft: "4px" }}>({c.credits} CH)</span>
+                              </div>
+                            </div>
+                          ))}
+                          <div style={{
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                            marginTop: "6px", paddingTop: "6px", borderTop: "1px solid rgba(255,255,255,0.06)",
+                          }}>
+                            <span style={{ color: "#94a3b8", fontSize: "11px" }}>
+                              {cumGPA.toFixed(2)} → <strong style={{ color: plan.gpa >= analysisResult.target ? "#22c55e" : "#fbbf24" }}>{plan.gpa.toFixed(3)}</strong>
+                              {plan.gpa >= analysisResult.target ? " ✅ reaches target" : ""}
+                            </span>
+                          {(() => {
+                            const pct = cumGPA > 0 ? ((plan.gpa - cumGPA) / cumGPA * 100).toFixed(1) + "%" : "—";
+                            return <span style={{ color: "#22c55e", fontSize: "12px", fontWeight: 600 }}>+{pct}</span>;
+                          })()}
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {analysisResult && !analysisResult.error && analysisResult.achievable && (
+                <div>
+                  <div style={{
+                    padding: "16px", background: "rgba(34,197,94,0.1)", borderRadius: "12px",
+                    border: "1px solid rgba(34,197,94,0.2)", marginBottom: "16px",
+                  }}>
+                    <p style={{ color: "#4ade80", fontSize: "14px", fontWeight: 600, margin: "0 0 4px" }}>
+                      ✅ You can reach {analysisResult.target.toFixed(1)} with {analysisResult.planned} credits!
+                    </p>
+                    <p style={{ color: "#94a3b8", fontSize: "13px", margin: 0 }}>
+                      Need average of {analysisResult.neededAvg.toFixed(2)} / 4.0 in the new courses
+                      {" | "}Max achievable CGPA: <strong style={{ color: "#fbbf24" }}>{analysisResult.maxGPA.toFixed(3)}</strong>
+                    </p>
+                  </div>
+
+                  <p style={{ color: "#cbd5e1", fontSize: "14px", fontWeight: 600, margin: "0 0 12px" }}>
+                    🎯 {Math.min(10, analysisResult.solutions.length)} different solutions:
+                  </p>
+                  <div style={{ display: "grid", gap: "6px" }}>
+                    {analysisResult.solutions.map((sol, i) => (
+                      <div key={i} style={{
+                        padding: "10px 14px", borderRadius: "10px",
+                        background: i === 0 ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.03)",
+                        border: i === 0 ? "1px solid rgba(34,197,94,0.2)" : "1px solid transparent",
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: "white", fontSize: "13px", fontWeight: 500 }}>
+                            {sol.desc}
+                          </span>
+                          <span style={{
+                            color: sol.newGPA >= cumGPA ? "#22c55e" : "#f59e0b",
+                            fontSize: "14px", fontWeight: "bold",
+                          }}>
+                            {sol.newGPA.toFixed(3)}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
+                          <span style={{ color: "#64748b", fontSize: "12px" }}>
+                            Grade: {sol.grade}
+                          </span>
+                          <span style={{
+                            color: "#64748b", fontSize: "12px",
+                          }}>
+                          {(() => {
+                            const pct2 = cumGPA > 0 ? ((sol.newGPA - cumGPA) * 100 / cumGPA).toFixed(1) + "% improvement" : "—";
+                            return <span style={{ color: "#64748b", fontSize: "12px" }}>+{pct2}</span>;
+                          })()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {analysisResult.maxGPA < 4.0 && (
+                    <div style={{ marginTop: "16px", padding: "14px", background: "rgba(59,130,246,0.08)", borderRadius: "10px" }}>
+                      <p style={{ color: "#93c5fd", fontSize: "13px", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                        <TrendingUp size={14} />
+                        To reach the max CGPA ({analysisResult.maxGPA.toFixed(3)}), take more credits or retake old courses
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div style={{
+          textAlign: "center", padding: "32px 0 20px",
+          borderTop: "1px solid rgba(255,255,255,0.04)", marginTop: "8px"
+        }}>
+          <span style={{ color: "rgba(148,163,184,0.25)", fontSize: "12px", letterSpacing: "0.5px" }}>
+            AIU GPA Calculator — Alamein International University © {new Date().getFullYear()}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}

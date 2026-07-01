@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AIU GPA Calculator</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="error-display" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;color:white;padding:40px;font-family:monospace;z-index:9999;overflow:auto"></div>
+    <script>
+      window.addEventListener("error", function(e) {
+        var el = document.getElementById("error-display");
+        if (el) {
+          el.style.display = "block";
+          el.innerHTML = "<h1 style='color:#ef4444'>Global Error</h1><pre style='color:#fbbf24;margin-top:16px'>" + (e.error ? e.error.stack || e.error.message : e.message) + "</pre>";
+        }
+      });
+      window.addEventListener("unhandledrejection", function(e) {
+        var el = document.getElementById("error-display");
+        if (el) {
+          el.style.display = "block";
+          el.innerHTML = "<h1 style='color:#ef4444'>Unhandled Promise</h1><pre style='color:#fbbf24;margin-top:16px'>" + (e.reason ? e.reason.stack || e.reason.message : e.reason) + "</pre>";
+        }
+      });
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
