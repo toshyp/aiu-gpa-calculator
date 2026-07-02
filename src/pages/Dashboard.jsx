@@ -866,7 +866,7 @@ export default function Dashboard() {
         <div style={{ marginTop: "0" }}>
           <button onClick={() => setShowWhatIf(!showWhatIf)}
             style={{
-              padding: "14px 22px", border: "none", borderRadius: "14px",
+              padding: "14px 22px", borderRadius: "14px",
               background: showWhatIf ? "rgba(59,130,246,0.12)" : "var(--tab-active-bg)",
               color: "var(--accent-light)", fontSize: "14px", fontWeight: 600, cursor: "pointer",
               display: "flex", alignItems: "center", gap: "8px", width: "100%",
