@@ -32,6 +32,11 @@ export default function Dashboard() {
   const [targetInput, setTargetInput] = useState("");
   const [runAnalysis, setRunAnalysis] = useState(false);
 
+  const [courseSearch, setCourseSearch] = useState("");
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importHtml, setImportHtml] = useState("");
+  const importRef = useRef(null);
+
   function parseReportHTML(html) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
@@ -65,9 +70,6 @@ export default function Dashboard() {
     setImportHtml("");
     toast(`Imported ${count} grade${count > 1 ? "s" : ""} from report`);
   }
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importHtml, setImportHtml] = useState("");
-  const importRef = useRef(null);
 
   function whatIfAnalysis() {
     const planned = parseFloat(plannedInput);
