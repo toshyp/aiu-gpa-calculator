@@ -661,16 +661,16 @@ export default function Dashboard() {
 
                 {/* Course Info */}
                 <div style={{ flex: 1, minWidth: "120px" }}>
-                  <p style={{ color: "var(--text)", fontSize: "13px", margin: 0, fontWeight: 500 }}>
+                  <p style={{ color: "var(--text)", fontSize: "13px", margin: 0, fontWeight: 600 }}>
                     {item.code}
                   </p>
-                  <p style={{ color: "var(--text-secondary-2)", fontSize: "12px", margin: "1px 0 0" }}>
+                  <p style={{ color: "var(--text-secondary-2)", fontSize: "11px", margin: "1px 0 0" }}>
                     {courses[item.code]?.name || item.code}
                   </p>
                 </div>
 
                 {/* Credits */}
-                <span style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600, minWidth: "36px" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: 500, minWidth: "36px" }}>
                   {cr} CH
                 </span>
 

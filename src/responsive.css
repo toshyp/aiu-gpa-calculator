@@ -222,10 +222,17 @@
   }
 }
 
-/* Admin course list - stack on very small screens */
+/* Admin grid inner - prevent overflow on small screens */
 @media (max-width: 480px) {
   .admin-grid-scroll-inner {
     min-width: 420px;
+  }
+}
+
+/* Ensure all inputs/selects respect box-sizing on small screens */
+@media (max-width: 640px) {
+  input, select, textarea {
+    max-width: 100%;
   }
 }
 
