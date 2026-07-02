@@ -58,7 +58,7 @@ function loadCourseOverrides() {
 }
 
 export function AppProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => localStorage.getItem("aiuUser") || null);
   const [adminAccount, setAdminAccount] = useState(loadAdmin);
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [selectedTrack, setSelectedTrack] = useState(null);
@@ -229,20 +229,11 @@ export function AppProvider({ children }) {
         }
         if (error.message && error.message.includes("relation") && error.message.includes("does not exist")) {
           setSupabaseAvailable(false);
-          setUser(studentId);
-          setSelectedProgram(null);
-          setSelectedTrack(null);
-          setGrades({});
-          setElectiveSelections({});
-          setUcSelections({});
-          setUeSelections({});
-          setCompletedCourses({});
-          setSemesterStatus({});
-          setLoginError("");
-          return null;
+        } else {
+          return error.message || "Registration failed";
         }
-        return error.message || "Registration failed";
       }
+      localStorage.setItem("aiuUser", studentId);
       setUser(studentId);
       setSelectedProgram(null);
       setSelectedTrack(null);
@@ -270,6 +261,7 @@ export function AppProvider({ children }) {
           return "Invalid ID or password";
         }
       }
+      localStorage.setItem("aiuUser", userId);
       setUser(userId);
       setSelectedProgram(null);
       setSelectedTrack(null);
@@ -344,6 +336,7 @@ export function AppProvider({ children }) {
 
   function logout() {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    localStorage.removeItem("aiuUser");
     setUser(null);
     setSelectedProgram(null);
     setSelectedTrack(null);
