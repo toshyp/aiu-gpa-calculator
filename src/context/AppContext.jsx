@@ -105,14 +105,6 @@ export function AppProvider({ children }) {
     try { localStorage.setItem("aiuCourseOverrides", JSON.stringify(courseOverrides)); } catch (e) { console.error("Failed to save overrides:", e); }
   }, [courseOverrides]);
 
-  useEffect(() => {
-    if (!user) return;
-    saveUserData();
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    };
-  }, [grades, electiveSelections, ucSelections, ueSelections, user]);
-
   const loadFromDb = useCallback(async (studentId) => {
     if (!supabaseAvailable) return false;
     const data = await loadStudentData(studentId);
@@ -170,6 +162,7 @@ export function AppProvider({ children }) {
     });
   }, [supabaseAvailable]);
 
+  // Load data FIRST (before save effect) to prevent overwriting localStorage with empty data
   useEffect(() => {
     if (user) {
       const key = `grades_${user}`;
@@ -192,6 +185,15 @@ export function AppProvider({ children }) {
       }
     }
   }, [user, supabaseAvailable, loadFromDb]);
+
+  // Save effect: only when data changes (not on user login), so load effect runs first
+  useEffect(() => {
+    if (!user) return;
+    saveUserData();
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [grades, electiveSelections, ucSelections, ueSelections]);
 
   function saveUserData() {
     if (!user) return;

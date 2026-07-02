@@ -101,15 +101,15 @@ export async function saveStudentData(studentId, grades, ucSlots, ueSlots, elect
 
     const ucEntries = Object.entries(ucSlots || {})
       .filter(([, code]) => code)
-      .map(([slot, course_code]) => ({ student_id: studentId, slot: Number(slot), course_code }));
+      .map(([slot, course_code]) => ({ student_id: studentId, slot, course_code }));
 
     const ueEntries = Object.entries(ueSlots || {})
       .filter(([, code]) => code)
-      .map(([slot, course_code]) => ({ student_id: studentId, slot: Number(slot), course_code }));
+      .map(([slot, course_code]) => ({ student_id: studentId, slot, course_code }));
 
     const electEntries = Object.entries(electiveSelections || {})
       .filter(([, code]) => code)
-      .map(([slot, course_code]) => ({ student_id: studentId, slot: Number(slot), course_code }));
+      .map(([slot, course_code]) => ({ student_id: studentId, slot, course_code }));
 
     const ops = [];
 
