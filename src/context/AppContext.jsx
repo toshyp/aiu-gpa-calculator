@@ -141,7 +141,17 @@ export function AppProvider({ children }) {
             if (!map[p.course]) map[p.course] = [];
             map[p.course].push(p.prerequisite);
           });
-          if (Object.keys(map).length) setPrereqData(map);
+          if (Object.keys(map).length) setPrereqData(prev => {
+            const merged = { ...prev };
+            for (const [course, prereqs] of Object.entries(map)) {
+              if (prereqs.length === 0) {
+                delete merged[course];
+              } else {
+                merged[course] = prereqs;
+              }
+            }
+            return merged;
+          });
         }
         if (data.overrides && data.overrides.length) {
           const ov = {};
