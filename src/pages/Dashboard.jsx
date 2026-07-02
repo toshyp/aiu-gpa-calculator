@@ -592,7 +592,7 @@ export default function Dashboard() {
 
         {/* Courses Table */}
         <div className="course-table" style={{
-          background: "rgba(255,255,255,0.02)", borderRadius: "18px",
+          background: "var(--card-bg-2)", borderRadius: "18px",
           border: "1px solid var(--divider-2)", overflow: "hidden", marginBottom: "16px"
         }}>
           <div style={{
@@ -635,7 +635,7 @@ export default function Dashboard() {
                 display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap",
                 transition: "background 0.2s"
               }}
-                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.015)"}
+                onMouseEnter={e => e.currentTarget.style.background = "var(--card-bg-3)"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
                 {/* Type Badge */}
@@ -786,9 +786,9 @@ export default function Dashboard() {
         {/* GPA Results */}
         {showResults && (
           <div style={{
-            background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.04))",
+            background: "var(--card-bg-2)",
             borderRadius: "18px",
-            border: "1px solid rgba(139,92,246,0.15)", padding: "28px", marginBottom: "20px"
+            border: "1px solid var(--divider-2)", padding: "28px", marginBottom: "20px"
           }}>
             <h3 style={{ color: "var(--text)", fontSize: "17px", fontWeight: 600, margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
               <CheckCircle size={20} color="#8b5cf6" /> GPA Results

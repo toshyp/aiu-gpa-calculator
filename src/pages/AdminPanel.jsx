@@ -59,7 +59,7 @@ export default function AdminPanel() {
   });
 
   return (
-    <div className="page-wrapper" style={{ minHeight: "100vh", background: "#0f172a" }}>
+    <div className="page-wrapper" style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <div className="admin-panel" style={{ maxWidth: "1100px", margin: "0 auto", padding: "20px" }}>
         {/* Admin Header */}
         <div className="admin-header" style={{

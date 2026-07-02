@@ -62,10 +62,10 @@
   --card-border: rgba(226,232,240,0.8);
   --card-border-hover: rgba(148,163,184,0.4);
   --text: #1e293b;
-  --text-secondary: rgba(100,116,139,0.8);
-  --text-secondary-2: rgba(100,116,139,0.6);
-  --text-muted: rgba(100,116,139,0.5);
-  --text-muted-2: rgba(100,116,139,0.35);
+  --text-secondary: rgba(71,85,105,0.85);
+  --text-secondary-2: rgba(71,85,105,0.7);
+  --text-muted: rgba(71,85,105,0.6);
+  --text-muted-2: rgba(71,85,105,0.45);
   --accent: #2563eb;
   --accent-light: #3b82f6;
   --accent-dark: #1d4ed8;
