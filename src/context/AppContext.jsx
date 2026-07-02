@@ -78,6 +78,7 @@ export function AppProvider({ children }) {
   const [studentDetails, setStudentDetails] = useState(null);
   const [loginError, setLoginError] = useState("");
   const [theme, setTheme] = useState(() => localStorage.getItem("aiuTheme") || "dark");
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const saveTimeoutRef = useRef(null);
 
@@ -162,7 +163,7 @@ export function AppProvider({ children }) {
     });
   }, [supabaseAvailable]);
 
-  // Load data FIRST (before save effect) to prevent overwriting localStorage with empty data
+  // Load data FIRST (before save effect) so save never fires with empty state
   useEffect(() => {
     if (user) {
       const key = `grades_${user}`;
@@ -183,17 +184,20 @@ export function AppProvider({ children }) {
       if (supabaseAvailable) {
         loadFromDb(user);
       }
+      setDataLoaded(true);
+    } else {
+      setDataLoaded(false);
     }
   }, [user, supabaseAvailable, loadFromDb]);
 
-  // Save effect: only when data changes (not on user login), so load effect runs first
+  // Save effect: never fires until load effect has marked dataLoaded
   useEffect(() => {
-    if (!user) return;
+    if (!user || !dataLoaded) return;
     saveUserData();
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [grades, electiveSelections, ucSelections, ueSelections]);
+  }, [grades, electiveSelections, ucSelections, ueSelections, completedCourses, semesterStatus, dataLoaded, user]);
 
   function saveUserData() {
     if (!user) return;
@@ -234,6 +238,7 @@ export function AppProvider({ children }) {
         }
       }
       localStorage.setItem("aiuUser", studentId);
+      setDataLoaded(false);
       setUser(studentId);
       setSelectedProgram(null);
       setSelectedTrack(null);
@@ -262,6 +267,7 @@ export function AppProvider({ children }) {
         }
       }
       localStorage.setItem("aiuUser", userId);
+      setDataLoaded(false);
       setUser(userId);
       setSelectedProgram(null);
       setSelectedTrack(null);
@@ -337,6 +343,7 @@ export function AppProvider({ children }) {
   function logout() {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     localStorage.removeItem("aiuUser");
+    setDataLoaded(false);
     setUser(null);
     setSelectedProgram(null);
     setSelectedTrack(null);

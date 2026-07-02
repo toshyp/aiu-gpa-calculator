@@ -231,12 +231,64 @@ async function run() {
   });
   await p7.close();
 
+  // ====== Test 8: Save-after-login race condition fix ======
+  await test("Data survives login cycle (no race-condition overwrite)", async () => {
+    const p8 = await ctx.newPage();
+    // Inject persistent data into localStorage BEFORE navigating
+    await p8.goto(BASE, { waitUntil: "networkidle" });
+    await wait(500);
+    await p8.evaluate((u) => {
+      localStorage.setItem("aiuUser", u);
+      localStorage.setItem(`grades_${u}`, JSON.stringify({
+        grades: { "MAT111": "A+", "LAN111": "B" },
+        electiveSelections: {},
+        ucSelections: {},
+        ueSelections: {},
+        completedCourses: {},
+        semesterStatus: {}
+      }));
+    }, TEST_USER);
+
+    // Reload → app restores data from localStorage
+    await p8.reload({ waitUntil: "networkidle" });
+    await wait(1500);
+
+    // Verify the stored grade exists in localStorage after load cycle
+    const afterLoad = await p8.evaluate((u) => {
+      const stored = localStorage.getItem(`grades_${u}`);
+      return stored ? JSON.parse(stored) : null;
+    }, TEST_USER);
+    if (!afterLoad) throw new Error("No data in localStorage after reload");
+    if (afterLoad.grades["MAT111"] !== "A+") throw new Error("Grade lost during load cycle");
+
+    // Now simulate a full logout → login cycle
+    await p8.evaluate(() => localStorage.removeItem("aiuUser"));
+    await p8.reload({ waitUntil: "networkidle" });
+    await wait(500);
+
+    // Login again (bypass UI: inject session directly)
+    await p8.evaluate((u) => {
+      localStorage.setItem("aiuUser", u);
+    }, TEST_USER);
+    await p8.reload({ waitUntil: "networkidle" });
+    await wait(1500);
+
+    const afterLogin = await p8.evaluate((u) => {
+      const stored = localStorage.getItem(`grades_${u}`);
+      return stored ? JSON.parse(stored) : null;
+    }, TEST_USER);
+    if (!afterLogin) throw new Error("No data in localStorage after login cycle");
+    if (afterLogin.grades["MAT111"] !== "A+") throw new Error("Grade lost during login cycle");
+
+    await p8.close();
+  });
+
   // ====== Summary ======
   const total = passed + failed;
   console.log(`\n========================================`);
   console.log(`  ${passed} / ${total} tests passed`);
   if (failed > 0) console.log(`  ${failed} / ${total} tests FAILED`);
-  console.log(`========================================`);
+  console.log(`========================================\n`);
 
   await browser.close();
   process.exit(failed > 0 ? 1 : 0);
