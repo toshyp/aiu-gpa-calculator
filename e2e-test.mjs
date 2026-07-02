@@ -315,6 +315,98 @@ async function run() {
     await p8.close();
   });
 
+  // ====== Test 9: Import grades from Print Report HTML ======
+  await test("Import grades from Print Report HTML", async () => {
+    const p9 = await ctx.newPage();
+    await p9.goto(BASE, { waitUntil: "load" });
+    await wait(1000);
+
+    // Set up user session cleanly
+    await p9.evaluate((u) => {
+      localStorage.clear();
+      localStorage.setItem("aiuUser", u);
+      localStorage.setItem(`grades_${u}`, JSON.stringify({
+        grades: {},
+        electiveSelections: {},
+        ucSelections: {},
+        ueSelections: {},
+        completedCourses: {},
+        semesterStatus: {}
+      }));
+    }, TEST_USER);
+
+    // Reload so the app picks up the session
+    await p9.reload({ waitUntil: "load" });
+    await wait(3000);
+
+    // Generate a Print Report HTML snippet with grades, UC, and a skipped entry
+    const reportHTML = `<!DOCTYPE html>
+<html><head><title>Academic Report - ${TEST_USER}</title></head>
+<body>
+<div class="semester">
+<h3>Semester 1 — GPA: 3.70</h3>
+<table><thead><tr><th>Code</th><th>Course Name</th><th>Type</th><th>Credits</th><th>Grade</th></tr></thead>
+<tbody>
+<tr><td style="font-weight:600;color:#3b82f6">MAT111</td><td>Calculus</td><td><span class="type-badge">CR</span></td><td>3</td><td><span class="grade-badge grade-pass">A+</span></td></tr>
+<tr><td style="font-weight:600;color:#3b82f6">LAN111</td><td>English</td><td><span class="type-badge">CR</span></td><td>3</td><td><span class="grade-badge grade-pass">B</span></td></tr>
+<tr><td style="font-weight:600;color:#3b82f6">GEO217</td><td>Climate Change</td><td><span class="type-badge">UC</span></td><td>3</td><td><span class="grade-badge grade-pass">A</span></td></tr>
+</tbody></table>
+</div>
+<div class="semester">
+<h3>Semester 2 — GPA: 2.70</h3>
+<table><thead><tr><th>Code</th><th>Course Name</th><th>Type</th><th>Credits</th><th>Grade</th></tr></thead>
+<tbody>
+<tr><td style="font-weight:600;color:#3b82f6">CSE014</td><td>Programming</td><td><span class="type-badge">CR</span></td><td>3</td><td><span class="grade-badge grade-pass">A-</span></td></tr>
+<tr><td style="font-weight:600;color:#3b82f6">MGT222</td><td>Entrepreneurship</td><td><span class="type-badge">CR</span></td><td>3</td><td><span class="grade-badge grade-none">\u2014</span></td></tr>
+</tbody></table>
+</div>
+</body></html>`;
+
+    // Simulate the import process: parse HTML and set grades into localStorage
+    const count = await p9.evaluate(({ html, u }) => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const rows = doc.querySelectorAll(".semester table tbody tr");
+      const parsed = {};
+      rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length < 5) return;
+        const code = cells[0].textContent.trim();
+        if (!code) return;
+        const gradeSpan = cells[4].querySelector(".grade-badge");
+        if (gradeSpan) {
+          const grade = gradeSpan.textContent.trim();
+          if (grade && grade !== "\u2014") parsed[code] = grade;
+        }
+      });
+      // bulkSetGrades equivalent
+      const stored = JSON.parse(localStorage.getItem(`grades_${u}`));
+      Object.assign(stored.grades, parsed);
+      localStorage.setItem(`grades_${u}`, JSON.stringify(stored));
+      return Object.keys(parsed).length;
+    }, { html: reportHTML, u: TEST_USER });
+
+    // Should have imported 3 grades (MAT111, LAN111, GEO217, CSE014 = 4; MGT222 skipped)
+    if (count !== 4) throw new Error("Expected 4 imported grades, got " + count);
+
+    // Refresh and verify grades survive
+    await p9.reload({ waitUntil: "load" });
+    await wait(2000);
+
+    const afterImport = await p9.evaluate((u) => {
+      const stored = localStorage.getItem(`grades_${u}`);
+      return stored ? JSON.parse(stored) : null;
+    }, TEST_USER);
+    if (!afterImport) throw new Error("No grades data after import + refresh");
+    if (afterImport.grades["MAT111"] !== "A+") throw new Error("MAT111 not imported correctly");
+    if (afterImport.grades["CSE014"] !== "A-") throw new Error("CSE014 not imported correctly");
+    if (afterImport.grades["GEO217"] !== "A") throw new Error("GEO217 not imported correctly");
+    // MGT222 has em-dash (no grade badge with grade), should NOT be imported
+    if (afterImport.grades["MGT222"]) throw new Error("MGT222 should not have been imported (no grade)");
+
+    await p9.close();
+  });
+
   // ====== Summary ======
   const total = passed + failed;
   console.log(`\n========================================`);

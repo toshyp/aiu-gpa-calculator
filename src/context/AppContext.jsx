@@ -419,6 +419,10 @@ export function AppProvider({ children }) {
     setGrades(prev => ({ ...prev, [code]: grade }));
   }
 
+  function bulkSetGrades(newGrades) {
+    setGrades(prev => ({ ...prev, ...newGrades }));
+  }
+
   function selectElective(slot, courseCode) {
     setElectiveSelections(prev => ({ ...prev, [slot]: courseCode }));
     setGrades(prev => {
@@ -616,7 +620,7 @@ export function AppProvider({ children }) {
       selectedProgram, setSelectedProgram,
       selectedTrack, setSelectedTrack,
       programs, courses,
-      grades, getGrade, setGrade, saveUserData,
+      grades, getGrade, setGrade, bulkSetGrades, saveUserData,
       electiveSelections, selectElective,
       ucSelections, selectUC,
       ueSelections, selectUE,

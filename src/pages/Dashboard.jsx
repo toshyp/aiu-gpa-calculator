@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { useToast } from "../components/Toast";
 import gradeScale, { gradeOptions } from "../data/gradeScale";
@@ -6,7 +6,7 @@ import {
   BookOpen, GraduationCap, BarChart3, Save, LogOut,
   ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Trash2,
   Target, TrendingUp, Layers, ArrowRight, Printer,
-  Sun, Moon
+  Sun, Moon, Upload, X
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -20,7 +20,7 @@ export default function Dashboard() {
     grades, electiveSelections, selectElective, saveUserData, getCourseName,
     ucSelections, selectUC, ueSelections, selectUE,
     checkPrerequisites, clearAllData, getUcPool, getUePool,
-    theme, setTheme
+    theme, setTheme, bulkSetGrades
   } = useApp();
 
   const { toast } = useToast();
@@ -32,7 +32,42 @@ export default function Dashboard() {
   const [targetInput, setTargetInput] = useState("");
   const [runAnalysis, setRunAnalysis] = useState(false);
 
-  const [courseSearch, setCourseSearch] = useState("");
+  function parseReportHTML(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const rows = doc.querySelectorAll(".semester table tbody tr");
+    const grades = {};
+    rows.forEach(row => {
+      const cells = row.querySelectorAll("td");
+      if (cells.length < 5) return;
+      const code = cells[0].textContent.trim();
+      if (!code) return;
+      const gradeSpan = cells[4].querySelector(".grade-badge");
+      if (gradeSpan) {
+        const grade = gradeSpan.textContent.trim();
+        if (grade && grade !== "\u2014") {
+          grades[code] = grade;
+        }
+      }
+    });
+    return grades;
+  }
+
+  function handleImport() {
+    const parsed = parseReportHTML(importHtml);
+    const count = Object.keys(parsed).length;
+    if (count === 0) {
+      toast("No grades found in the report HTML");
+      return;
+    }
+    bulkSetGrades(parsed);
+    setShowImportModal(false);
+    setImportHtml("");
+    toast(`Imported ${count} grade${count > 1 ? "s" : ""} from report`);
+  }
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importHtml, setImportHtml] = useState("");
+  const importRef = useRef(null);
 
   function whatIfAnalysis() {
     const planned = parseFloat(plannedInput);
@@ -517,6 +552,16 @@ export default function Dashboard() {
               onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(59,130,246,0.4)"; }}
               onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(59,130,246,0.3)"; }}
             ><Save size={15} /> Save</button>
+            <button onClick={() => setShowImportModal(true)}
+              style={{
+                padding: "10px", border: "1px solid var(--card-border)", borderRadius: "10px",
+                background: "var(--card-bg)", color: "var(--text-muted)", cursor: "pointer",
+                display: "flex", transition: "all 0.2s"
+              }}
+              title="Import grades from a saved Print Report HTML file"
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--card-border)"; e.currentTarget.style.color = "var(--btn-text)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--text-muted)"; }}
+            ><Upload size={16} /></button>
             <button onClick={logout} style={{
               padding: "10px", border: "1px solid var(--btn-secondary-border)",
               borderRadius: "10px", background: "var(--card-bg)", color: "var(--text-muted)", cursor: "pointer",
@@ -855,8 +900,71 @@ export default function Dashboard() {
                       }}>
                         {getGrade(code)}
                       </span>
-                    </div>
-                  </div>
+        </div>
+
+        {/* Import Modal */}
+        {showImportModal && (
+          <div ref={importRef} style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+          }}
+            onClick={e => { if (e.target === importRef.current) setShowImportModal(false); }}
+          >
+            <div style={{
+              background: "var(--card-bg)", borderRadius: "16px",
+              border: "1px solid var(--card-border)",
+              maxWidth: "640px", width: "100%", padding: "24px",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.4)"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ color: "var(--text)", fontSize: "17px", fontWeight: 600, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Upload size={18} color="var(--accent)" /> Import Grades from Report
+                </h3>
+                <button onClick={() => setShowImportModal(false)}
+                  style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}>
+                  <X size={20} />
+                </button>
+              </div>
+              <p style={{ color: "var(--text-secondary-2)", fontSize: "13px", margin: "0 0 12px" }}>
+                Open your saved Print Report HTML file and paste the contents below.
+                The system will extract all course codes and grades.
+              </p>
+              <textarea
+                value={importHtml}
+                onChange={e => setImportHtml(e.target.value)}
+                placeholder={"<html>...</html>"}
+                rows={10}
+                style={{
+                  width: "100%", padding: "12px", borderRadius: "10px",
+                  border: "1px solid var(--card-border)",
+                  background: "var(--input-bg)", color: "var(--text)",
+                  fontSize: "12px", fontFamily: "monospace", resize: "vertical",
+                  outline: "none", boxSizing: "border-box"
+                }}
+              />
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "16px" }}>
+                <button onClick={() => setShowImportModal(false)}
+                  style={{
+                    padding: "10px 20px", borderRadius: "10px",
+                    border: "1px solid var(--card-border)",
+                    background: "var(--card-bg)", color: "var(--text-secondary)",
+                    cursor: "pointer", fontSize: "13px", fontWeight: 500
+                  }}
+                >Cancel</button>
+                <button onClick={handleImport}
+                  style={{
+                    padding: "10px 24px", borderRadius: "10px", border: "none",
+                    background: "var(--accent-gradient)", color: "var(--btn-text)",
+                    cursor: "pointer", fontSize: "13px", fontWeight: 600,
+                    display: "flex", alignItems: "center", gap: "6px"
+                  }}
+                ><Upload size={15} /> Import</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
                 ))}
             </div>
           </div>
