@@ -233,9 +233,17 @@ export function AppProvider({ children }) {
   }
 
   async function removeStudent(studentId) {
-    if (!supabaseAvailable) return;
-    await deleteStudentAccount(studentId);
-    loadAllStudents();
+    if (supabaseAvailable) {
+      const { error } = await deleteStudentAccount(studentId);
+      if (error) {
+        console.error("Delete error:", error);
+        return;
+      }
+    }
+    const key = `grades_${studentId}`;
+    localStorage.removeItem(key);
+    setStudentDetails(null);
+    await loadAllStudents();
   }
 
   function logout() {

@@ -160,14 +160,15 @@ export async function getStudentDetails(studentId) {
 
 export async function deleteStudentAccount(studentId) {
   if (!supabase) return { error: "Supabase not configured" };
-  await Promise.all([
+  const results = await Promise.all([
     supabase.from("grades").delete().eq("student_id", studentId),
     supabase.from("uc_selections").delete().eq("student_id", studentId),
     supabase.from("ue_selections").delete().eq("student_id", studentId),
     supabase.from("elective_selections").delete().eq("student_id", studentId),
     supabase.from("students").delete().eq("student_id", studentId),
   ]);
-  return { error: null };
+  const err = results.find(r => r.error)?.error;
+  return { error: err || null };
 }
 
 export async function saveAdminData(type, data) {
