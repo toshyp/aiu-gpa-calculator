@@ -690,7 +690,7 @@ export default function Dashboard() {
                       transition: "border-color 0.2s"
                     }}
                   >
-                    <option value={item.slot} style={{ background: "var(--input-bg)" }}>
+                    <option value={item.slot}>
                       — Select Course —
                     </option>
                     {(() => {
@@ -709,7 +709,7 @@ export default function Dashboard() {
                         pool = univElectPool.map(c => c.code).filter(c => !selectedElsewhere.includes(c));
                       }
                       return pool.map(cCode => (
-                        <option key={cCode} value={cCode} style={{ background: "var(--input-bg)" }}>
+                        <option key={cCode} value={cCode}>
                           {cCode} — {courses[cCode]?.name || cCode}
                         </option>
                       ));
@@ -717,21 +717,21 @@ export default function Dashboard() {
                   </select>
                 )}
 
-                {/* Grade Selector */}
+                    {/* Grade Selector */}
                 <select
                   value={grade}
                   onChange={e => setGrade(item.code, e.target.value)}
                   style={{
                     padding: "7px 12px", borderRadius: "8px", border: "1px solid var(--card-border)",
-                    background: grade ? "rgba(34,197,94,0.08)" : "var(--card-bg)",
-                    color: grade ? "var(--success)" : "var(--text-muted)", fontSize: "12px", fontWeight: 700,
+                    background: grade ? "rgba(34,197,94,0.08)" : "var(--input-bg-2)",
+                    color: grade ? "var(--success)" : "var(--text-secondary)", fontSize: "12px", fontWeight: 600,
                     cursor: "pointer", minWidth: "70px",
                     transition: "all 0.2s"
                   }}
                 >
-                  <option value="" style={{ background: "var(--input-bg)" }}>—</option>
+                  <option value="">—</option>
                   {gradeOptions.map(g => (
-                    <option key={g} value={g} style={{ background: "var(--input-bg)" }}>{g}</option>
+                    <option key={g} value={g}>{g}</option>
                   ))}
                 </select>
               </div>
