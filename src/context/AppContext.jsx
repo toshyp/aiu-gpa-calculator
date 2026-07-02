@@ -184,12 +184,18 @@ export function AppProvider({ children }) {
     if (!supabase) return "Supabase is not configured";
     const { data, error } = await registerStudent(studentId, password);
     if (error) {
-      setSupabaseAvailable(false);
-      setUser(studentId);
-      setSelectedProgram(null);
-      setSelectedTrack(null);
-      setLoginError("");
-      return null;
+      if (error.message && error.message.includes("duplicate")) {
+        return "This ID is already registered. Please use a different ID or sign in.";
+      }
+      if (error.message && error.message.includes("relation") && error.message.includes("does not exist")) {
+        setSupabaseAvailable(false);
+        setUser(studentId);
+        setSelectedProgram(null);
+        setSelectedTrack(null);
+        setLoginError("");
+        return null;
+      }
+      return error.message || "Registration failed";
     }
     setUser(studentId);
     setSelectedProgram(null);
