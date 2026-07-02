@@ -415,14 +415,41 @@ export function AppProvider({ children }) {
 
   function selectElective(slot, courseCode) {
     setElectiveSelections(prev => ({ ...prev, [slot]: courseCode }));
+    setGrades(prev => {
+      if (prev[slot] && !prev[courseCode]) {
+        const updated = { ...prev };
+        updated[courseCode] = updated[slot];
+        delete updated[slot];
+        return updated;
+      }
+      return prev;
+    });
   }
 
   function selectUC(slot, courseCode) {
     setUcSelections(prev => ({ ...prev, [slot]: courseCode }));
+    setGrades(prev => {
+      if (prev[slot] && !prev[courseCode]) {
+        const updated = { ...prev };
+        updated[courseCode] = updated[slot];
+        delete updated[slot];
+        return updated;
+      }
+      return prev;
+    });
   }
 
   function selectUE(slot, courseCode) {
     setUeSelections(prev => ({ ...prev, [slot]: courseCode }));
+    setGrades(prev => {
+      if (prev[slot] && !prev[courseCode]) {
+        const updated = { ...prev };
+        updated[courseCode] = updated[slot];
+        delete updated[slot];
+        return updated;
+      }
+      return prev;
+    });
   }
 
   function getGrade(code) {
