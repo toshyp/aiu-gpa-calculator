@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { useToast } from "../components/Toast";
 import gradeScale, { gradeOptions } from "../data/gradeScale";
