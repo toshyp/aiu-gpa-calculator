@@ -77,40 +77,50 @@ export function AppProvider({ children }) {
   const [allStudents, setAllStudents] = useState([]);
   const [studentDetails, setStudentDetails] = useState(null);
   const [loginError, setLoginError] = useState("");
+  const [theme, setTheme] = useState(() => localStorage.getItem("aiuTheme") || "dark");
+
   const saveTimeoutRef = useRef(null);
 
   useEffect(() => {
-    localStorage.setItem("adminAccount", JSON.stringify(adminAccount));
+    try { localStorage.setItem("aiuTheme", theme); } catch (e) { console.error("Failed to save theme:", e); }
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    try { localStorage.setItem("adminAccount", JSON.stringify(adminAccount)); } catch (e) { console.error("Failed to save adminAccount:", e); }
     if (supabaseAvailable) {
       saveAdminData("admin_account", { id: 1, username: adminAccount.username, password: adminAccount.password });
     }
   }, [adminAccount, supabaseAvailable]);
 
   useEffect(() => {
-    localStorage.setItem("aiuPools", JSON.stringify({ ucPool, uePool }));
+    try { localStorage.setItem("aiuPools", JSON.stringify({ ucPool, uePool })); } catch (e) { console.error("Failed to save pools:", e); }
   }, [ucPool, uePool]);
 
   useEffect(() => {
-    localStorage.setItem("aiuPrereqs", JSON.stringify(prereqData));
+    try { localStorage.setItem("aiuPrereqs", JSON.stringify(prereqData)); } catch (e) { console.error("Failed to save prereqs:", e); }
   }, [prereqData]);
 
   useEffect(() => {
-    localStorage.setItem("aiuCourseOverrides", JSON.stringify(courseOverrides));
+    try { localStorage.setItem("aiuCourseOverrides", JSON.stringify(courseOverrides)); } catch (e) { console.error("Failed to save overrides:", e); }
   }, [courseOverrides]);
 
   useEffect(() => {
     if (!user) return;
     saveUserData();
-  }, [grades, electiveSelections, ucSelections, ueSelections]);
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [grades, electiveSelections, ucSelections, ueSelections, user]);
 
   const loadFromDb = useCallback(async (studentId) => {
     if (!supabaseAvailable) return false;
     const data = await loadStudentData(studentId);
     if (data && !data.error) {
-      if (data.grades) setGrades(data.grades);
-      if (data.electiveSelections) setElectiveSelections(data.electiveSelections);
-      if (data.ucSlots) setUcSelections(data.ucSlots);
-      if (data.ueSlots) setUeSelections(data.ueSlots);
+      setGrades(prev => ({ ...prev, ...(data.grades || {}) }));
+      setElectiveSelections(prev => ({ ...prev, ...(data.electiveSelections || {}) }));
+      setUcSelections(prev => ({ ...prev, ...(data.ucSlots || {}) }));
+      setUeSelections(prev => ({ ...prev, ...(data.ueSlots || {}) }));
       return true;
     }
     return false;
@@ -124,9 +134,10 @@ export function AppProvider({ children }) {
     loadAdminData().then(data => {
       if (data && !data.error) {
         if (data.admin) setAdminAccount(data.admin);
-        if (data.prereqs) {
+        if (data.prereqs && Array.isArray(data.prereqs)) {
           const map = {};
           data.prereqs.forEach(p => {
+            if (!p) return;
             if (!map[p.course]) map[p.course] = [];
             map[p.course].push(p.prerequisite);
           });
@@ -142,6 +153,10 @@ export function AppProvider({ children }) {
         setSupabaseAvailable(false);
       }
       setDbReady(true);
+    }).catch(e => {
+      console.error("loadAdminData failed:", e);
+      setSupabaseAvailable(false);
+      setDbReady(true);
     });
   }, [supabaseAvailable]);
 
@@ -150,13 +165,17 @@ export function AppProvider({ children }) {
       const key = `grades_${user}`;
       const stored = localStorage.getItem(key);
       if (stored) {
-        const data = JSON.parse(stored);
-        setGrades(data.grades || {});
-        setElectiveSelections(data.electiveSelections || {});
-        setUcSelections(data.ucSelections || {});
-        setUeSelections(data.ueSelections || {});
-        setCompletedCourses(data.completedCourses || {});
-        setSemesterStatus(data.semesterStatus || {});
+        try {
+          const data = JSON.parse(stored);
+          setGrades(data.grades || {});
+          setElectiveSelections(data.electiveSelections || {});
+          setUcSelections(data.ucSelections || {});
+          setUeSelections(data.ueSelections || {});
+          setCompletedCourses(data.completedCourses || {});
+          setSemesterStatus(data.semesterStatus || {});
+        } catch (e) {
+          console.error("Failed to parse stored grades data:", e);
+        }
       }
       if (supabaseAvailable) {
         loadFromDb(user);
@@ -167,92 +186,152 @@ export function AppProvider({ children }) {
   function saveUserData() {
     if (!user) return;
     const key = `grades_${user}`;
-    localStorage.setItem(key, JSON.stringify({
-      grades, electiveSelections, ucSelections, ueSelections,
-      completedCourses, semesterStatus
-    }));
+    try {
+      localStorage.setItem(key, JSON.stringify({
+        grades, electiveSelections, ucSelections, ueSelections,
+        completedCourses, semesterStatus
+      }));
+    } catch (e) {
+      console.error("Failed to save user data:", e);
+    }
 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    saveTimeoutRef.current = setTimeout(() => {
+    saveTimeoutRef.current = setTimeout(async () => {
       if (supabaseAvailable) {
-        saveStudentData(user, grades, ucSelections, ueSelections, electiveSelections);
+        try {
+          await saveStudentData(user, grades, ucSelections, ueSelections, electiveSelections);
+        } catch (e) {
+          console.error("saveStudentData failed:", e);
+        }
       }
     }, 2000);
   }
 
   async function register(studentId, password) {
-    if (!supabase) return "Supabase is not configured";
-    const { data, error } = await registerStudent(studentId, password);
-    if (error) {
-      if (error.message && error.message.includes("duplicate")) {
-        return "This ID is already registered. Please use a different ID or sign in.";
+    try {
+      if (!supabase) return "Supabase is not configured";
+      const { data, error } = await registerStudent(studentId, password);
+      if (error) {
+        if (error.message && error.message.includes("duplicate")) {
+          return "This ID is already registered. Please use a different ID or sign in.";
+        }
+        if (error.message && error.message.includes("relation") && error.message.includes("does not exist")) {
+          setSupabaseAvailable(false);
+          setUser(studentId);
+          setSelectedProgram(null);
+          setSelectedTrack(null);
+          setGrades({});
+          setElectiveSelections({});
+          setUcSelections({});
+          setUeSelections({});
+          setCompletedCourses({});
+          setSemesterStatus({});
+          setLoginError("");
+          return null;
+        }
+        return error.message || "Registration failed";
       }
-      if (error.message && error.message.includes("relation") && error.message.includes("does not exist")) {
-        setSupabaseAvailable(false);
-        setUser(studentId);
-        setSelectedProgram(null);
-        setSelectedTrack(null);
-        setLoginError("");
-        return null;
-      }
-      return error.message || "Registration failed";
+      setUser(studentId);
+      setSelectedProgram(null);
+      setSelectedTrack(null);
+      setGrades({});
+      setElectiveSelections({});
+      setUcSelections({});
+      setUeSelections({});
+      setCompletedCourses({});
+      setSemesterStatus({});
+      setLoginError("");
+      return null;
+    } catch (e) {
+      return e.message || "Registration failed due to a network error";
     }
-    setUser(studentId);
-    setSelectedProgram(null);
-    setSelectedTrack(null);
-    setLoginError("");
-    return null;
   }
 
   async function login(userId, password) {
-    if (supabaseAvailable && !userId.startsWith("admin_")) {
-      const { data, error } = await loginStudent(userId, password);
-      if (error || !data) {
-        if (error) {
-          setSupabaseAvailable(false);
-          setUser(userId);
-          setSelectedProgram(null);
-          setSelectedTrack(null);
-          setLoginError("");
-          return;
+    try {
+      if (supabaseAvailable && !userId.startsWith("admin_")) {
+        const { data, error } = await loginStudent(userId, password);
+        if (error || !data) {
+          if (error) {
+            return "Supabase is unavailable. Logging in locally.";
+          }
+          return "Invalid ID or password";
         }
-        setLoginError("Invalid ID or password");
-        return;
       }
+      setUser(userId);
+      setSelectedProgram(null);
+      setSelectedTrack(null);
+      setGrades({});
+      setElectiveSelections({});
+      setUcSelections({});
+      setUeSelections({});
+      setCompletedCourses({});
+      setSemesterStatus({});
+      setLoginError("");
+      return null;
+    } catch (e) {
+      return e.message || "Login failed due to a network error";
     }
-    setUser(userId);
-    setSelectedProgram(null);
-    setSelectedTrack(null);
-    setLoginError("");
   }
 
-  async function loadAllStudents() {
-    if (!supabaseAvailable) return;
-    const list = await getAllStudents();
-    setAllStudents(list);
-  }
+  const studentsControllerRef = useRef(null);
+
+  const loadAllStudents = useCallback(async () => {
+    try {
+      if (!supabaseAvailable) return;
+      if (studentsControllerRef.current) {
+        studentsControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      studentsControllerRef.current = controller;
+      const list = await getAllStudents();
+      if (!controller.signal.aborted) {
+        setAllStudents(list || []);
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") console.error("loadAllStudents failed:", e);
+    }
+  }, [supabaseAvailable]);
+
+  const detailsControllerRef = useRef(null);
 
   async function viewStudentDetails(studentId) {
-    if (!supabaseAvailable) return;
-    const details = await getStudentDetails(studentId);
-    setStudentDetails({ studentId, ...details });
+    try {
+      if (!supabaseAvailable) return;
+      if (detailsControllerRef.current) {
+        detailsControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      detailsControllerRef.current = controller;
+      const details = await getStudentDetails(studentId);
+      if (!controller.signal.aborted && details) {
+        setStudentDetails({ studentId, ...details });
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") console.error("viewStudentDetails failed:", e);
+    }
   }
 
   async function removeStudent(studentId) {
-    if (supabaseAvailable) {
-      const { error } = await deleteStudentAccount(studentId);
-      if (error) {
-        console.error("Delete error:", error);
-        return;
+    try {
+      if (supabaseAvailable) {
+        const { error } = await deleteStudentAccount(studentId);
+        if (error) {
+          console.error("Delete error:", error);
+          return;
+        }
       }
+      const key = `grades_${studentId}`;
+      localStorage.removeItem(key);
+      setStudentDetails(null);
+      await loadAllStudents();
+    } catch (e) {
+      console.error("removeStudent failed:", e);
     }
-    const key = `grades_${studentId}`;
-    localStorage.removeItem(key);
-    setStudentDetails(null);
-    await loadAllStudents();
   }
 
   function logout() {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     setUser(null);
     setSelectedProgram(null);
     setSelectedTrack(null);
@@ -295,6 +374,7 @@ export function AppProvider({ children }) {
     if (!semesters) return [];
     const all = [];
     semesters.forEach(sem => {
+      if (!sem || !Array.isArray(sem.courses)) return;
       sem.courses.forEach((code, idx) => {
         const type = Array.isArray(sem.type) ? sem.type[idx] : "mandatory";
         let actualCode = code;
@@ -351,10 +431,11 @@ export function AppProvider({ children }) {
   function getTrack() {
     const prog = getProgram();
     if (!prog || !prog.hasTracks || !selectedTrack) return null;
-    return prog.tracks[selectedTrack] || null;
+    return (prog.tracks && prog.tracks[selectedTrack]) || null;
   }
 
   function calcSemesterGPA(semCourses) {
+    if (!semCourses || !Array.isArray(semCourses)) return 0;
     let totalPoints = 0, totalCredits = 0;
     semCourses.forEach(({ code }) => {
       const grade = grades[code];
@@ -400,7 +481,7 @@ export function AppProvider({ children }) {
     if (!prog) return 0;
     const total = prog.totalCredits;
     const completed = calcCompletedCredits();
-    return total - completed;
+    return Math.max(0, total - completed);
   }
 
   function getUcPool() { return ucPool; }
@@ -408,38 +489,62 @@ export function AppProvider({ children }) {
 
   function addToUcPool(course) {
     if (!ucPool.find(c => c.code === course.code)) {
-      setUcPool(prev => [...prev, course]);
-      if (supabaseAvailable) {
-        saveAdminData("uc_pool", { slot: ucPool.length + 1, code: course.code, name: course.name });
-      }
+      setUcPool(prev => {
+        const updated = [...prev, course];
+        if (supabaseAvailable) {
+          saveAdminData("uc_pool", { slot: updated.length, code: course.code, name: course.name });
+        }
+        return updated;
+      });
     }
   }
   function removeFromUcPool(code) {
     setUcPool(prev => prev.filter(c => c.code !== code));
     if (supabaseAvailable) {
-      supabase.from("uc_pool").delete().eq("code", code);
+      try { supabase.from("uc_pool").delete().eq("code", code).then(); } catch (e) { console.error("removeFromUcPool failed:", e); }
     }
   }
   function updateUcPool(code, field, value) {
-    setUcPool(prev => prev.map(c => c.code === code ? { ...c, [field]: value } : c));
+    setUcPool(prev => {
+      const updated = prev.map(c => c.code === code ? { ...c, [field]: value } : c);
+      if (supabaseAvailable) {
+        const idx = updated.findIndex(c => c.code === code);
+        if (idx !== -1) {
+          saveAdminData("uc_pool", { slot: idx + 1, ...updated[idx] });
+        }
+      }
+      return updated;
+    });
   }
 
   function addToUePool(course) {
     if (!uePool.find(c => c.code === course.code)) {
-      setUePool(prev => [...prev, course]);
-      if (supabaseAvailable) {
-        saveAdminData("ue_pool", { slot: uePool.length + 1, code: course.code, name: course.name });
-      }
+      setUePool(prev => {
+        const updated = [...prev, course];
+        if (supabaseAvailable) {
+          saveAdminData("ue_pool", { slot: updated.length, code: course.code, name: course.name });
+        }
+        return updated;
+      });
     }
   }
   function removeFromUePool(code) {
     setUePool(prev => prev.filter(c => c.code !== code));
     if (supabaseAvailable) {
-      supabase.from("ue_pool").delete().eq("code", code);
+      try { supabase.from("ue_pool").delete().eq("code", code).then(); } catch (e) { console.error("removeFromUePool failed:", e); }
     }
   }
   function updateUePool(code, field, value) {
-    setUePool(prev => prev.map(c => c.code === code ? { ...c, [field]: value } : c));
+    setUePool(prev => {
+      const updated = prev.map(c => c.code === code ? { ...c, [field]: value } : c);
+      if (supabaseAvailable) {
+        const idx = updated.findIndex(c => c.code === code);
+        if (idx !== -1) {
+          saveAdminData("ue_pool", { slot: idx + 1, ...updated[idx] });
+        }
+      }
+      return updated;
+    });
   }
 
   function addPrereq(courseCode, prereqCode) {
@@ -447,21 +552,21 @@ export function AppProvider({ children }) {
     setPrereqData(prev => {
       const existing = prev[courseCode] || [];
       if (existing.includes(prereqCode)) return prev;
-      if (supabaseAvailable) {
-        saveAdminData("prerequisite", { course: courseCode, prerequisite: prereqCode });
-      }
       return { ...prev, [courseCode]: [...existing, prereqCode] };
     });
+    if (supabaseAvailable) {
+      saveAdminData("prerequisite", { course: courseCode, prerequisite: prereqCode });
+    }
   }
 
   function removePrereq(courseCode, prereqCode) {
     setPrereqData(prev => {
       const list = prev[courseCode] || [];
-      if (supabaseAvailable) {
-        saveAdminData("remove_prerequisite", { course: courseCode, prerequisite: prereqCode });
-      }
       return { ...prev, [courseCode]: list.filter(p => p !== prereqCode) };
     });
+    if (supabaseAvailable) {
+      saveAdminData("remove_prerequisite", { course: courseCode, prerequisite: prereqCode });
+    }
   }
 
   function getPrereqData() { return prereqData; }
@@ -492,6 +597,7 @@ export function AppProvider({ children }) {
       allStudents, loadAllStudents,
       studentDetails, setStudentDetails, viewStudentDetails,
       removeStudent,
+      theme, setTheme,
     }}>
       {children}
     </AppContext.Provider>

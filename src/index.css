@@ -4,22 +4,54 @@
   box-sizing: border-box;
 }
 
+:root,
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-gradient: linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%);
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --text: #e2e8f0;
+  --text-secondary: rgba(148,163,184,0.7);
+  --text-muted: rgba(148,163,184,0.4);
+  --accent: #3b82f6;
+  --input-bg: rgba(255,255,255,0.04);
+  --input-border: rgba(255,255,255,0.08);
+}
+
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  --card-bg: rgba(255,255,255,0.8);
+  --card-border: rgba(226,232,240,0.8);
+  --text: #1e293b;
+  --text-secondary: rgba(100,116,139,0.8);
+  --text-muted: rgba(100,116,139,0.5);
+  --accent: #2563eb;
+  --input-bg: white;
+  --input-border: rgba(148,163,184,0.3);
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
 
 input:focus, select:focus {
   outline: none;
-  border-color: #3b82f6 !important;
+  border-color: var(--accent) !important;
   box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
 }
 
 select option {
   background: #1e293b;
   color: white;
+}
+
+[data-theme="light"] select option {
+  background: white;
+  color: #1e293b;
 }
 
 ::-webkit-scrollbar {

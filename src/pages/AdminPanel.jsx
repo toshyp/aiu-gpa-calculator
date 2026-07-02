@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
+import { useToast } from "../components/Toast";
 import courses from "../data/courses";
 import programs from "../data/programs";
 import { Save, LogOut, BookOpen, GitBranch, Shield, List, Plus, Trash2, X, Users, ChevronDown, ChevronRight } from "lucide-react";
@@ -17,6 +18,7 @@ export default function AdminPanel() {
     studentDetails, setStudentDetails, viewStudentDetails,
     removeStudent,
   } = useApp();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("courses");
   const [editCourse, setEditCourse] = useState(null);
   const [editPrereq, setEditPrereq] = useState(null);
@@ -31,6 +33,7 @@ export default function AdminPanel() {
 
   function handleSave() {
     setSaved(true);
+    toast("Changes saved!");
     setTimeout(() => setSaved(false), 2000);
   }
 
@@ -87,6 +90,33 @@ export default function AdminPanel() {
           </div>
         </div>
 
+        {/* Stats Cards */}
+        {allStudents.length > 0 && (
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gap: "12px", marginBottom: "20px"
+          }}>
+          {[
+            { label: "Total Students", value: allStudents.length, color: "#3b82f6" },
+            { label: "Registered Today", value: allStudents.filter(s => s.created_at && new Date(s.created_at).toDateString() === new Date().toDateString()).length, color: "#22c55e" },
+            { label: "Last 24h", value: allStudents.filter(s => s.created_at && Date.now() - new Date(s.created_at).getTime() < 86400000).length, color: "#8b5cf6" },
+            ].map(card => (
+              <div key={card.label} style={{
+                background: `linear-gradient(135deg, ${card.color}08, ${card.color}03)`,
+                borderRadius: "14px", padding: "16px 20px",
+                border: `1px solid ${card.color}15`
+              }}>
+                <p style={{ color: "#64748b", fontSize: "11px", margin: "0 0 6px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  {card.label}
+                </p>
+                <p style={{ color: card.color, fontSize: "26px", fontWeight: 700, margin: 0 }}>
+                  {card.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="admin-tabs-wrapper" style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
           <button style={tabStyle("courses")} onClick={() => setActiveTab("courses")}>
@@ -123,11 +153,11 @@ export default function AdminPanel() {
                 }}
               />
             </div>
-            <div style={{
+            <div className="admin-grid-scroll" style={{
               background: "rgba(255,255,255,0.03)", borderRadius: "16px",
               border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden"
             }}>
-              <div style={{
+              <div className="admin-grid-scroll-inner" style={{
                 display: "grid", gridTemplateColumns: "100px 1fr 80px",
                 padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
                 color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
@@ -288,10 +318,10 @@ export default function AdminPanel() {
                   </div>
                   <span style={{ color: "#3b82f6", fontSize: "14px", fontWeight: 600 }}>{p.totalCredits}</span>
                   <span style={{ color: "#94a3b8", fontSize: "13px" }}>
-                    {p.hasTracks ? Object.keys(p.tracks).length : "—"}
+                    {p.hasTracks && p.tracks ? Object.keys(p.tracks).length : "—"}
                   </span>
                 </div>
-                {p.hasTracks && (
+                {p.hasTracks && p.tracks && (
                   <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
                     {Object.values(p.tracks).map(t => (
                       <span key={t.id} style={{
@@ -316,11 +346,11 @@ export default function AdminPanel() {
               <BookOpen size={18} color="#8b5cf6" /> University Requirements Pool (UC)
               <span style={{ color: "#64748b", fontSize: "12px", fontWeight: 400 }}>(2 CH each)</span>
             </h3>
-            <div style={{
+            <div className="admin-grid-scroll" style={{
               background: "rgba(255,255,255,0.03)", borderRadius: "16px",
               border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: "24px"
             }}>
-              <div style={{
+              <div className="admin-grid-scroll-inner" style={{
                 display: "grid", gridTemplateColumns: "100px 1fr 80px 50px",
                 padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
                 color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
@@ -368,11 +398,11 @@ export default function AdminPanel() {
               <BookOpen size={18} color="#ec4899" /> University Elective Pool (UE)
               <span style={{ color: "#64748b", fontSize: "12px", fontWeight: 400 }}>(2 CH each)</span>
             </h3>
-            <div style={{
+            <div className="admin-grid-scroll" style={{
               background: "rgba(255,255,255,0.03)", borderRadius: "16px",
               border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: "24px"
             }}>
-              <div style={{
+              <div className="admin-grid-scroll-inner" style={{
                 display: "grid", gridTemplateColumns: "100px 1fr 80px 50px",
                 padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
                 color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
@@ -420,11 +450,11 @@ export default function AdminPanel() {
         {/* Students Tab */}
         {activeTab === "students" && (
           <div>
-            <div style={{
+            <div className="admin-grid-scroll" style={{
               background: "rgba(255,255,255,0.03)", borderRadius: "16px",
               border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: "16px"
             }}>
-              <div style={{
+              <div className="admin-grid-scroll-inner" style={{
                 display: "grid", gridTemplateColumns: "120px 1fr 180px 100px",
                 padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
                 color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"

@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import { useApp } from "../context/AppContext";
-import { gradeOptions } from "../data/gradeScale";
+import { useToast } from "../components/Toast";
+import gradeScale, { gradeOptions } from "../data/gradeScale";
 import {
   BookOpen, GraduationCap, BarChart3, Save, LogOut,
   ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Trash2,
-  Target, TrendingUp, Sparkles, Layers, ArrowRight, Printer
+  Target, TrendingUp, Layers, ArrowRight, Printer,
+  Sun, Moon
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -15,10 +17,13 @@ export default function Dashboard() {
     getProgram, getTrack, getEffectiveCourses,
     getCourseCredits, getGrade, setGrade,
     calcCumulativeGPA, calcCompletedCredits, calcRemainingCredits,
-    grades, electiveSelections, selectElective, saveUserData,
+    grades, electiveSelections, selectElective, saveUserData, getCourseName,
     ucSelections, selectUC, ueSelections, selectUE,
-    checkPrerequisites, clearAllData, getUcPool, getUePool
+    checkPrerequisites, clearAllData, getUcPool, getUePool,
+    theme, setTheme
   } = useApp();
+
+  const { toast } = useToast();
 
   const [activeSem, setActiveSem] = useState(1);
   const [showResults, setShowResults] = useState(false);
@@ -27,13 +32,7 @@ export default function Dashboard() {
   const [targetInput, setTargetInput] = useState("");
   const [runAnalysis, setRunAnalysis] = useState(false);
 
-  const gradeScale = {
-    "A+": 4.0, "A": 4.0, "A-": 3.7,
-    "B+": 3.3, "B": 3.0, "B-": 2.7,
-    "C+": 2.3, "C": 2.0, "C-": 1.7,
-    "D+": 1.3, "D": 1.0, "D-": 0.7,
-    "F": 0.0,
-  };
+  const [courseSearch, setCourseSearch] = useState("");
 
   function whatIfAnalysis() {
     const planned = parseFloat(plannedInput);
@@ -51,7 +50,8 @@ export default function Dashboard() {
 
     if (target > maxGPA) {
       const shortfall = target * totalAfter - maxPoints;
-      const extraCredits = Math.ceil(shortfall / (4.0 - target));
+      const denominator = 4.0 - target;
+      const extraCredits = denominator > 0 ? Math.ceil(shortfall / denominator) : Infinity;
       return {
         achievable: false, maxGPA, extraCredits, planned, target,
         curGPA, curCredits,
@@ -135,12 +135,12 @@ export default function Dashboard() {
   const prog = getProgram();
   const track = getTrack();
   const effectiveCourses = getEffectiveCourses();
+  const cumGPA = useMemo(() => calcCumulativeGPA(), [effectiveCourses, grades]);
 
-  const cumGPA = useMemo(() => calcCumulativeGPA(), [effectiveCourses]);
-  const completedCredits = useMemo(() => calcCompletedCredits(), [effectiveCourses]);
+  const completedCredits = useMemo(() => calcCompletedCredits(), [effectiveCourses, grades]);
+
   const remainingCredits = useMemo(() => calcRemainingCredits(), [effectiveCourses]);
-
-  const analysisResult = runAnalysis ? whatIfAnalysis() : null;
+  const analysisResult = useMemo(() => runAnalysis ? whatIfAnalysis() : null, [runAnalysis, plannedInput, targetInput, cumGPA, completedCredits, grades, effectiveCourses]);
 
   const semesters = track ? track.semesters : prog?.semesters || [];
 
@@ -153,7 +153,7 @@ export default function Dashboard() {
 
   function getSemesterCourses(semNum) {
     const sem = semesters.find(s => s.number === semNum);
-    if (!sem) return [];
+    if (!sem || !Array.isArray(sem.courses)) return [];
     return sem.courses.map((code, idx) => {
       const type = sem.type ? sem.type[idx] || "mandatory" : "mandatory";
       let actualCode = code;
@@ -180,66 +180,73 @@ export default function Dashboard() {
 
   function printReport() {
     const totalCredits = trackOrProg.totalCredits;
-    const gpa = showResults ? cumGPA.toFixed(2) : "—";
-    const gradeNames = { "A+":"A+","A":"A","A-":"A-","B+":"B+","B":"B","B-":"B-","C+":"C+","C":"C","C-":"C-","D+":"D+","D":"D","D-":"D-","F":"F" };
-    let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Academic Report - ${user}</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #1e293b; padding: 40px; }
-      .header { text-align: center; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 3px solid #3b82f6; }
-      .header h1 { font-size: 24px; color: #0f172a; margin-bottom: 4px; }
-      .header .sub { color: #64748b; font-size: 13px; }
-      .header .aiu { font-size: 14px; color: #3b82f6; font-weight: 700; margin-bottom: 8px; }
-      .info { display: flex; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
-      .info-item { flex: 1; min-width: 140px; padding: 14px 18px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; }
-      .info-item .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-      .info-item .value { font-size: 22px; font-weight: 700; color: #0f172a; }
-      .semester { margin-bottom: 24px; page-break-inside: avoid; }
-      .semester h3 { font-size: 15px; color: #0f172a; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0; }
-      table { width: 100%; border-collapse: collapse; font-size: 13px; }
-      th { text-align: left; padding: 8px 12px; background: #f1f5f9; color: #475569; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
-      td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }
-      .grade-badge { display: inline-block; padding: 2px 10px; border-radius: 6px; font-weight: 700; font-size: 12px; }
-      .grade-pass { background: #dcfce7; color: #166534; }
-      .grade-fail { background: #fee2e2; color: #991b1b; }
-      .grade-none { color: #94a3b8; font-style: italic; }
-      .type-badge { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; background: #e2e8f0; color: #475569; }
-      .footer { text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 11px; }
-      @media print { body { padding: 20px; } }
-    </style></head><body>
-    <div class="header">
-      <div class="aiu">ALAMEIN INTERNATIONAL UNIVERSITY</div>
-      <h1>Academic Report</h1>
-      <div class="sub">Faculty of Computer Science & Engineering</div>
-    </div>
-    <div class="info">
-      <div class="info-item"><div class="label">Student ID</div><div class="value">${user}</div></div>
-      <div class="info-item"><div class="label">Program</div><div class="value">${prog.name}${track ? ` — ${track.name}` : ""}</div></div>
-      <div class="info-item"><div class="label">Cumulative GPA</div><div class="value">${gpa} / 4.0</div></div>
-      <div class="info-item"><div class="label">Completed Credits</div><div class="value">${completedCredits} / ${totalCredits}</div></div>
-    </div>`;
+    const gpa = showResults ? cumGPA.toFixed(2) : "\u2014";
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    let html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Academic Report - ' + user + '</title>' +
+      '<style>' +
+      '* { margin:0;padding:0;box-sizing:border-box; }' +
+      'body { font-family:Segoe UI,Arial,sans-serif;background:#fff;color:#1e293b;padding:40px; }' +
+      '.header { text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:3px solid #3b82f6; }' +
+      '.header h1 { font-size:22px;color:#0f172a;margin-bottom:2px;letter-spacing:-0.3px; }' +
+      '.header .sub { color:#64748b;font-size:12px; }' +
+      '.header .aiu { font-size:13px;color:#3b82f6;font-weight:700;margin-bottom:6px;letter-spacing:1px; }' +
+      '.header .date { color:#94a3b8;font-size:11px;margin-top:4px; }' +
+      '.info { display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap; }' +
+      '.info-item { flex:1;min-width:130px;padding:14px 18px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0; }' +
+      '.info-item .label { font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px; }' +
+      '.info-item .value { font-size:20px;font-weight:700;color:#0f172a; }' +
+      '.semester { margin-bottom:20px;page-break-inside:avoid; }' +
+      '.semester h3 { font-size:14px;color:#0f172a;margin-bottom:6px;padding:8px 12px;background:#f1f5f9;border-radius:6px;display:flex;justify-content:space-between; }' +
+      'table { width:100%;border-collapse:collapse;font-size:13px; }' +
+      'th { text-align:left;padding:8px 12px;background:#f8fafc;color:#64748b;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:2px solid #e2e8f0; }' +
+      'td { padding:8px 12px;border-bottom:1px solid #f1f5f9; }' +
+      'tr:last-child td { border-bottom:none; }' +
+      '.grade-badge { display:inline-block;padding:2px 10px;border-radius:6px;font-weight:700;font-size:12px; }' +
+      '.grade-pass { background:#dcfce7;color:#166534; }' +
+      '.grade-fail { background:#fee2e2;color:#991b1b; }' +
+      '.grade-none { color:#94a3b8;font-style:italic; }' +
+      '.type-badge { display:inline-block;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:600;background:#e2e8f0;color:#475569; }' +
+      '.footer { text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:11px;line-height:1.6; }' +
+      '.prereq-warn { background:#fffbeb;font-size:11px;color:#d97706; }' +
+      '.prereq-warn td { padding:6px 12px; }' +
+      '@media print { body { padding:20px; } }' +
+      '</style></head><body>' +
+      '<div class="header">' +
+      '<div class="aiu">ALAMEIN INTERNATIONAL UNIVERSITY</div>' +
+      '<h1>Academic Report</h1>' +
+      '<div class="sub">Faculty of Computer Science &amp; Engineering</div>' +
+      '<div class="date">Generated: ' + dateStr + '</div></div>' +
+      '<div class="info">' +
+      '<div class="info-item"><div class="label">Student ID</div><div class="value">' + user + '</div></div>' +
+      '<div class="info-item"><div class="label">Program</div><div class="value">' + prog.name + (track ? " \u2014 " + track.name : "") + '</div></div>' +
+      '<div class="info-item"><div class="label">Cumulative GPA</div><div class="value">' + gpa + ' / 4.0</div></div>' +
+      '<div class="info-item"><div class="label">Completed Credits</div><div class="value">' + completedCredits + ' / ' + totalCredits + '</div></div></div>';
 
-    semesters.forEach(sem => {
-      const semGPA = calcSemGPA(sem.number);
-      const semList = getSemesterCourses(sem.number);
-      html += `<div class="semester"><h3>Semester ${sem.number} — GPA: ${semGPA}</h3><table><thead><tr><th>Code</th><th>Course Name</th><th>Type</th><th>Credits</th><th>Grade</th></tr></thead><tbody>`;
-      semList.forEach(({ code, type, prereq }) => {
-        const grade = getGrade(code);
-        const cr = getCourseCredits(code);
-        const typeLabel = type === "university-requirement" ? "UC" : type === "university-elective" ? "UE" : type === "field-training" ? "FT" : type === "graduation-project" ? "GP" : type === "elective" ? "TE" : "CR";
-        const gradeClass = grade === "F" ? "grade-fail" : grade ? "grade-pass" : "grade-none";
-        const courseName = courses[code]?.name || code;
-        html += `<tr><td style="font-weight:600;color:#3b82f6">${code}</td><td>${courseName}</td><td><span class="type-badge">${typeLabel}</span></td><td>${cr}</td><td>${grade ? `<span class="grade-badge ${gradeClass}">${grade}</span>` : '<span class="grade-none">—</span>'}</td></tr>`;
+    semesters.forEach(function (sem) {
+      var semGPA = calcSemGPA(sem.number);
+      var semList = getSemesterCourses(sem.number);
+      html += '<div class="semester"><h3>Semester ' + sem.number + ' \u2014 GPA: ' + semGPA + '</h3><table><thead><tr><th>Code</th><th>Course Name</th><th>Type</th><th>Credits</th><th>Grade</th></tr></thead><tbody>';
+      semList.forEach(function (item) {
+        var code = item.code;
+        var type = item.type;
+        var prereq = item.prereq;
+        var grade = getGrade(code);
+        var cr = getCourseCredits(code);
+        var typeLabel = type === "university-requirement" ? "UC" : type === "university-elective" ? "UE" : type === "field-training" ? "FT" : type === "graduation-project" ? "GP" : type === "elective" ? "TE" : "CR";
+        var gradeClass = grade === "F" ? "grade-fail" : grade ? "grade-pass" : "grade-none";
+        var courseName = courses[code] ? courses[code].name : code;
+        html += '<tr><td style="font-weight:600;color:#3b82f6">' + code + '</td><td>' + courseName + '</td><td><span class="type-badge">' + typeLabel + '</span></td><td>' + cr + '</td><td>' + (grade ? '<span class="grade-badge ' + gradeClass + '">' + grade + '</span>' : '<span class="grade-none">\u2014</span>') + '</td></tr>';
         if (!prereq.met && grade) {
-          html += `<tr style="background:#fffbeb"><td colspan="5" style="font-size:11px;color:#d97706">⚠ Prerequisite missing: ${prereq.missing.join(", ")}</td></tr>`;
+          html += '<tr class="prereq-warn"><td colspan="5">\u26A0 Prerequisite missing: ' + prereq.missing.join(", ") + '</td></tr>';
         }
       });
-      html += `</tbody></table></div>`;
+      html += '</tbody></table></div>';
     });
 
-    html += `<div class="footer">This report was generated by AIU GPA Calculator — Alamein International University</div>`;
-    html += `</body></html>`;
-    const w = window.open("", "_blank");
+    html += '<div class="footer">This report was generated by AIU GPA Calculator \u2014 Alamein International University</div>';
+    html += '</body></html>';
+    var w = window.open("", "_blank");
     w.document.write(html);
     w.document.close();
     w.print();
@@ -358,6 +365,16 @@ export default function Dashboard() {
   }
 
   if (prog.hasTracks && !track) {
+    const trackList = prog.tracks ? Object.values(prog.tracks) : [];
+    if (trackList.length === 0) {
+      return (
+        <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
+          <div style={{ maxWidth: "680px", margin: "0 auto", paddingTop: "32px" }}>
+            <p style={{ color: "rgba(148,163,184,0.7)" }}>No tracks available for this program.</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
         <div style={{ maxWidth: "680px", margin: "0 auto", paddingTop: "32px" }}>
@@ -394,7 +411,7 @@ export default function Dashboard() {
           </div>
 
           <div style={{ display: "grid", gap: "12px" }}>
-            {Object.values(prog.tracks).map((t, idx) => {
+            {trackList.map((t, idx) => {
               const accent = cardColors[idx % cardColors.length];
               return (
                 <div key={t.id} onClick={() => setSelectedTrack(t.id)}
@@ -470,7 +487,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 style={{ color: "white", fontSize: "20px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
-                  {prog.name}{track ? ` — ${track.name}` : ""}
+                  {prog.name}{track ? " — " + track.name : ""}
                 </h1>
                 <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", margin: "2px 0 0" }}>
                   Student: <span style={{ color: "rgba(148,163,184,0.7)" }}>{user}</span>
@@ -478,8 +495,18 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="page-header-actions" style={{ display: "flex", gap: "8px" }}>
-            <button onClick={() => { saveUserData(); alert("Data saved!"); }}
+          <div className="page-header-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              style={{
+                padding: "10px", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px",
+                background: "rgba(255,255,255,0.04)", color: "rgba(148,163,184,0.6)", cursor: "pointer",
+                display: "flex", transition: "all 0.2s"
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(148,163,184,0.6)"; }}>
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <button onClick={() => { saveUserData(); toast("Data saved!"); }}
               style={{
                 padding: "10px 20px", border: "none", borderRadius: "10px",
                 background: "linear-gradient(135deg, #1d4ed8, #3b82f6)", color: "white", cursor: "pointer",
@@ -532,10 +559,10 @@ export default function Dashboard() {
         </div>
 
         {/* Semester Tabs */}
-        <div className="semester-tabs-wrapper" style={{
-          display: "flex", gap: "6px", marginBottom: "16px",
-          overflowX: "auto", flexWrap: "wrap"
-        }}>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "16px", alignItems: "center", flexWrap: "wrap" }}>
+          <div className="semester-tabs-wrapper" style={{
+            display: "flex", gap: "6px", overflowX: "auto", flex: 1
+          }}>
           {semesters.map(sem => (
             <button key={sem.number} onClick={() => setActiveSem(sem.number)}
               style={{
@@ -551,6 +578,16 @@ export default function Dashboard() {
               Semester {sem.number}
             </button>
           ))}
+          <input
+            type="text" placeholder="Search course..." value={courseSearch}
+            onChange={e => setCourseSearch(e.target.value)}
+            style={{
+              padding: "8px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.04)", color: "white", fontSize: "12px",
+              minWidth: "140px", outline: "none"
+            }}
+          />
+        </div>
         </div>
 
         {/* Courses Table */}
@@ -570,7 +607,11 @@ export default function Dashboard() {
               {semCourses ? semCourses.courses.length : 0} courses
             </span>
           </div>
-          {semCourses && getSemesterCourses(activeSem).map((item, idx) => {
+          {semCourses && getSemesterCourses(activeSem)
+            .filter(item => !courseSearch ||
+              (item.code || "").toLowerCase().includes(courseSearch.toLowerCase()) ||
+              (getCourseName(item.code) || "").toLowerCase().includes(courseSearch.toLowerCase()))
+            .map((item, idx) => {
             const cr = getCourseCredits(item.code);
             const grade = getGrade(item.code);
             const isElective = item.type === "elective";
@@ -699,7 +740,7 @@ export default function Dashboard() {
         </div>
 
         {/* Calculate Button */}
-        <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "24px" }}>
           <button onClick={() => setShowResults(true)}
             style={{
               padding: "14px 32px", border: "none", borderRadius: "12px",

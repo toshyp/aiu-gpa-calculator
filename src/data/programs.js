@@ -1,24 +1,3 @@
-export const universityRequirementPool = [
-  { code: "GEO217", name: "Climate Change and Sustainability", credits: 2 },
-  { code: "LAN111", name: "English Language 2", credits: 2 },
-  { code: "LAN120", name: "German Language", credits: 2 },
-  { code: "CSE013", name: "Introduction to Information Systems & Technology", credits: 2 },
-  { code: "MGT222", name: "Entrepreneurship and Innovation", credits: 2 },
-  { code: "AN114", name: "Artistic Appreciation", credits: 2 },
-  { code: "LIB116", name: "Research and Analysis Skills", credits: 2 },
-  { code: "LAN112", name: "Critical Thinking", credits: 2 },
-];
-
-export const universityElectivePool = [
-  { code: "SOC107", name: "Community Participation in developing modern Egypt", credits: 2 },
-  { code: "PSC207", name: "Contemporary Global Issues (Ecosystem Health and Human Well-being)", credits: 2 },
-  { code: "LAN170A", name: "English for Specific Purposes (Pharmacy)", credits: 2 },
-  { code: "LAN170B", name: "English for Specific Purposes (Computer Science and Engineering)", credits: 2 },
-  { code: "MGT201", name: "Negotiation Skills", credits: 2 },
-  { code: "MGT102", name: "Strategic Planning", credits: 2 },
-  { code: "MEC013", name: "Technical Report Writing", credits: 2 },
-];
-
 const programs = {
   "computer-engineering": {
     id: "computer-engineering",

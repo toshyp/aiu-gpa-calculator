@@ -213,3 +213,25 @@
     align-items: flex-start !important;
   }
 }
+
+/* Admin grid containers - horizontal scroll on mobile */
+@media (max-width: 640px) {
+  .admin-grid-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Admin course list - stack on very small screens */
+@media (max-width: 480px) {
+  .admin-grid-scroll-inner {
+    min-width: 420px;
+  }
+}
+
+/* Login decorative circles - hide on mobile */
+@media (max-width: 768px) {
+  .login-circles {
+    display: none !important;
+  }
+}

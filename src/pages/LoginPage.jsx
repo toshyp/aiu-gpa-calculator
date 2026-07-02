@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { LogIn, Shield, User, GraduationCap, BookOpen, UserPlus } from "lucide-react";
+import { LogIn, Shield, User, GraduationCap, BookOpen, UserPlus, Sun, Moon } from "lucide-react";
 
 export default function LoginPage() {
-  const { login, register, adminAccount, loginError } = useApp();
+  const { login, register, adminAccount, loginError, theme, setTheme } = useApp();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState("student");
@@ -31,11 +31,16 @@ export default function LoginPage() {
           return;
         }
         if (subMode === "register") {
+          if (password.length < 4) {
+            setError("Password must be at least 4 characters");
+            setLoading(false);
+            return;
+          }
           const err = await register(userId.trim(), password);
           if (err) setError(err);
         } else {
-          await login(userId.trim(), password);
-          if (loginError) setError(loginError);
+          const err = await login(userId.trim(), password);
+          if (err) setError(err);
         }
       }
     } catch (e) {
@@ -60,22 +65,24 @@ export default function LoginPage() {
       display: "flex", alignItems: "center", justifyContent: "center", padding: "20px",
       position: "relative", overflow: "hidden"
     }}>
-      <div style={{
-        position: "absolute", top: "-20%", right: "-10%", width: "500px", height: "500px",
-        borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)",
+      <div className="login-circles">
+        <div style={{
+          position: "absolute", top: "-20%", right: "-10%", width: "500px", height: "500px",
+          borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)",
+          pointerEvents: "none"
+        }} />
+        <div style={{
+          position: "absolute", bottom: "-20%", left: "-10%", width: "400px", height: "400px",
+          borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)",
+          pointerEvents: "none"
+        }} />
+        <div style={{
+          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+          width: "800px", height: "800px",
+          background: "radial-gradient(circle, rgba(59,130,246,0.03) 0%, transparent 60%)",
         pointerEvents: "none"
       }} />
-      <div style={{
-        position: "absolute", bottom: "-20%", left: "-10%", width: "400px", height: "400px",
-        borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)",
-        pointerEvents: "none"
-      }} />
-      <div style={{
-        position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-        width: "800px", height: "800px",
-        background: "radial-gradient(circle, rgba(59,130,246,0.03) 0%, transparent 60%)",
-        pointerEvents: "none"
-      }} />
+      </div>
 
       <div className="login-card" style={{
         background: "rgba(255,255,255,0.04)", backdropFilter: "blur(24px)",
@@ -84,6 +91,19 @@ export default function LoginPage() {
         boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset",
         position: "relative", zIndex: 1
       }}>
+        {/* Theme toggle */}
+        <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          style={{
+            position: "absolute", top: "16px", right: "16px",
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "10px", padding: "8px", cursor: "pointer",
+            color: "rgba(148,163,184,0.6)", display: "flex",
+            transition: "all 0.2s"
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "white"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(148,163,184,0.6)"; }}>
+          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
         <div style={{ textAlign: "center", marginBottom: "36px" }}>
           <div style={{
             width: "80px", height: "80px", borderRadius: "20px",
