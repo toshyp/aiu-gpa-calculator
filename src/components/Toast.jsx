@@ -20,10 +20,10 @@ export function ToastProvider({ children }) {
   const toast = useCallback((msg, type) => addToast(msg, type), [addToast]);
 
   const colors = {
-    success: { bg: "rgba(34,197,94,0.15)", border: "rgba(34,197,94,0.3)", text: "#22c55e", icon: "✓" },
-    error: { bg: "rgba(239,68,68,0.15)", border: "rgba(239,68,68,0.3)", text: "#ef4444", icon: "✕" },
-    info: { bg: "rgba(59,130,246,0.15)", border: "rgba(59,130,246,0.3)", text: "#3b82f6", icon: "ℹ" },
-    warning: { bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.3)", text: "#f59e0b", icon: "⚠" },
+    success: { bg: "var(--success-bg)", border: "rgba(34,197,94,0.3)", text: "var(--success)", icon: "✓" },
+    error: { bg: "var(--danger-bg)", border: "rgba(239,68,68,0.3)", text: "var(--danger)", icon: "✕" },
+    info: { bg: "var(--tab-active-bg)", border: "rgba(59,130,246,0.3)", text: "var(--accent)", icon: "ℹ" },
+    warning: { bg: "var(--warning-bg)", border: "rgba(245,158,11,0.3)", text: "var(--warning)", icon: "⚠" },
   };
 
   return (

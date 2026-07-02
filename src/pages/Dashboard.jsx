@@ -259,7 +259,7 @@ export default function Dashboard() {
 
   if (!prog) {
     return (
-      <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
+      <div className="page-wrapper" style={{ minHeight: "100vh", background: "var(--bg-gradient)", padding: "20px" }}>
         <div style={{ maxWidth: "960px", margin: "0 auto", paddingTop: "32px" }}>
           {/* Header */}
           <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px" }}>
@@ -270,35 +270,35 @@ export default function Dashboard() {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 boxShadow: "0 4px 16px rgba(59,130,246,0.3)"
               }}>
-                <span style={{ color: "white", fontSize: "16px", fontWeight: 800, fontStyle: "italic" }}>AIU</span>
+                <span style={{ color: "var(--btn-text)", fontSize: "16px", fontWeight: 800, fontStyle: "italic" }}>AIU</span>
               </div>
               <div>
-                <h1 style={{ color: "white", fontSize: "20px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
+                <h1 style={{ color: "var(--text)", fontSize: "20px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
                   GPA Calculator
                 </h1>
-                <p style={{ color: "rgba(148,163,184,0.6)", fontSize: "12px", margin: "2px 0 0" }}>
+                <p style={{ color: "var(--text-muted)", fontSize: "12px", margin: "2px 0 0" }}>
                   Faculty of Computer Science & Engineering
                 </p>
               </div>
             </div>
             <button onClick={logout} style={{
-              padding: "9px 18px", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "10px", background: "rgba(255,255,255,0.04)", color: "rgba(148,163,184,0.7)",
+              padding: "9px 18px", border: "1px solid var(--btn-secondary-border)",
+              borderRadius: "10px", background: "var(--card-bg)", color: "var(--text-secondary)",
               cursor: "pointer", fontSize: "13px", fontWeight: 500,
               display: "flex", alignItems: "center", gap: "7px",
               transition: "all 0.2s"
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(148,163,184,0.7)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--card-border)"; e.currentTarget.style.color = "var(--btn-text)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
             ><LogOut size={15} /> Logout</button>
           </div>
 
           {/* Title */}
           <div style={{ marginBottom: "28px" }}>
-            <h2 style={{ color: "white", fontSize: "22px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.3px" }}>
+            <h2 style={{ color: "var(--text)", fontSize: "22px", fontWeight: 700, margin: "0 0 6px", letterSpacing: "-0.3px" }}>
               Select Your Program
             </h2>
-            <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "13px", margin: 0 }}>
+            <p style={{ color: "var(--text-secondary-2)", fontSize: "13px", margin: 0 }}>
               Choose your program to view your study plan and calculate your GPA
             </p>
           </div>
@@ -311,22 +311,22 @@ export default function Dashboard() {
               return (
                 <div key={p.id} onClick={() => { setSelectedProgram(p.id); setSelectedTrack(null); }}
                   style={{
-                    background: "rgba(255,255,255,0.03)", borderRadius: "18px", padding: "28px 24px 24px",
-                    border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
+                    background: "var(--card-bg-2)", borderRadius: "18px", padding: "28px 24px 24px",
+                    border: "1px solid var(--divider-2)", cursor: "pointer",
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     position: "relative", overflow: "hidden"
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.transform = "translateY(-4px)";
                     e.currentTarget.style.borderColor = accent;
-                    e.currentTarget.style.boxShadow = `0 12px 40px rgba(0,0,0,0.3), 0 0 0 1px ${accent}22 inset`;
-                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                    e.currentTarget.style.boxShadow = `0 12px 40px var(--shadow), 0 0 0 1px ${accent}22 inset`;
+                    e.currentTarget.style.background = "var(--divider)";
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.borderColor = "var(--divider-2)";
                     e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                    e.currentTarget.style.background = "var(--card-bg-2)";
                   }}
                 >
                   {/* Top accent bar */}
@@ -336,7 +336,7 @@ export default function Dashboard() {
                     borderRadius: "18px 18px 0 0"
                   }} />
                   <GraduationCap size={32} color={accent} style={{ marginBottom: "14px", opacity: 0.9 }} />
-                  <h3 style={{ color: "white", fontSize: "17px", fontWeight: 600, margin: "0 0 6px" }}>{p.name}</h3>
+                  <h3 style={{ color: "var(--text)", fontSize: "17px", fontWeight: 600, margin: "0 0 6px" }}>{p.name}</h3>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
                     <span style={{
                       padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
@@ -346,13 +346,13 @@ export default function Dashboard() {
                     </span>
                     {isTracked && <span style={{
                       padding: "3px 10px", borderRadius: "6px", fontSize: "11px", fontWeight: 500,
-                      background: "rgba(255,255,255,0.05)", color: "rgba(148,163,184,0.6)"
+                      background: "var(--divider)", color: "var(--text-muted)"
                     }}>
                       <Layers size={11} style={{ verticalAlign: "middle", marginRight: "3px" }} />
                       Tracks
                     </span>}
                   </div>
-                  <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", margin: 0 }}>
+                  <p style={{ color: "var(--text-secondary-2)", fontSize: "12px", margin: 0 }}>
                     {p.department}
                   </p>
                 </div>
@@ -368,45 +368,45 @@ export default function Dashboard() {
     const trackList = prog.tracks ? Object.values(prog.tracks) : [];
     if (trackList.length === 0) {
       return (
-        <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
+        <div className="page-wrapper" style={{ minHeight: "100vh", background: "var(--bg-gradient)", padding: "20px" }}>
           <div style={{ maxWidth: "680px", margin: "0 auto", paddingTop: "32px" }}>
-            <p style={{ color: "rgba(148,163,184,0.7)" }}>No tracks available for this program.</p>
+            <p style={{ color: "var(--text-secondary)" }}>No tracks available for this program.</p>
           </div>
         </div>
       );
     }
     return (
-      <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)", padding: "20px" }}>
+      <div className="page-wrapper" style={{ minHeight: "100vh", background: "var(--bg-gradient)", padding: "20px" }}>
         <div style={{ maxWidth: "680px", margin: "0 auto", paddingTop: "32px" }}>
           <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px" }}>
             <div>
               <button onClick={() => { setSelectedProgram(null); setSelectedTrack(null); }}
                 style={{
-                  color: "rgba(148,163,184,0.5)", background: "none", border: "none",
+                  color: "var(--text-secondary-2)", background: "none", border: "none",
                   cursor: "pointer", fontSize: "13px", marginBottom: "12px", padding: 0,
                   display: "flex", alignItems: "center", gap: "6px",
                   transition: "color 0.2s"
                 }}
-                onMouseEnter={e => e.currentTarget.style.color = "#3b82f6"}
-                onMouseLeave={e => e.currentTarget.style.color = "rgba(148,163,184,0.5)"}
+                onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
+                onMouseLeave={e => e.currentTarget.style.color = "var(--text-secondary-2)"}
               >
                 ← Back to Programs
               </button>
-              <h1 style={{ color: "white", fontSize: "24px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
+              <h1 style={{ color: "var(--text)", fontSize: "24px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
                 {prog.name}
               </h1>
-              <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "13px", margin: "4px 0 0" }}>
+              <p style={{ color: "var(--text-secondary-2)", fontSize: "13px", margin: "4px 0 0" }}>
                 Select your specialization track
               </p>
             </div>
             <button onClick={logout} style={{
-              padding: "9px 18px", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "10px", background: "rgba(255,255,255,0.04)", color: "rgba(148,163,184,0.7)",
+              padding: "9px 18px", border: "1px solid var(--btn-secondary-border)",
+              borderRadius: "10px", background: "var(--card-bg)", color: "var(--text-secondary)",
               cursor: "pointer", fontSize: "13px", display: "flex", alignItems: "center", gap: "7px",
               transition: "all 0.2s"
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(148,163,184,0.7)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--card-border)"; e.currentTarget.style.color = "var(--btn-text)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
             ><LogOut size={15} /></button>
           </div>
 
@@ -416,24 +416,24 @@ export default function Dashboard() {
               return (
                 <div key={t.id} onClick={() => setSelectedTrack(t.id)}
                   style={{
-                    background: "rgba(255,255,255,0.03)", borderRadius: "16px", padding: "22px 24px",
-                    border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
+                    background: "var(--card-bg-2)", borderRadius: "16px", padding: "22px 24px",
+                    border: "1px solid var(--divider-2)", cursor: "pointer",
                     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.transform = "translateX(4px)";
                     e.currentTarget.style.borderColor = accent;
-                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.background = "var(--divider-2)";
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.transform = "translateX(0)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                    e.currentTarget.style.borderColor = "var(--divider-2)";
+                    e.currentTarget.style.background = "var(--card-bg-2)";
                   }}
                 >
                   <div>
-                    <h3 style={{ color: "white", fontSize: "16px", fontWeight: 600, margin: "0 0 4px" }}>
+                    <h3 style={{ color: "var(--text)", fontSize: "16px", fontWeight: 600, margin: "0 0 4px" }}>
                       {t.name}
                     </h3>
                     <span style={{
@@ -443,7 +443,7 @@ export default function Dashboard() {
                       {t.totalCredits} CR HRS
                     </span>
                   </div>
-                  <ArrowRight size={20} color="rgba(148,163,184,0.3)" />
+                  <ArrowRight size={20} color="var(--text-muted-2)" />
                 </div>
               );
             })}
@@ -456,7 +456,7 @@ export default function Dashboard() {
   const trackOrProg = track || prog;
 
   return (
-    <div className="page-wrapper" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 50%, #0b1120 100%)" }}>
+    <div className="page-wrapper" style={{ minHeight: "100vh", background: "var(--bg-gradient)" }}>
       <div className="dashboard-content" style={{ maxWidth: "1100px", margin: "0 auto", padding: "20px" }}>
         {/* Header */}
         <div className="page-header" style={{
@@ -466,13 +466,13 @@ export default function Dashboard() {
           <div>
             <button onClick={() => { prog?.hasTracks ? setSelectedTrack(null) : setSelectedProgram(null); }}
               style={{
-                color: "rgba(148,163,184,0.5)", background: "none", border: "none",
+                color: "var(--text-secondary-2)", background: "none", border: "none",
                 cursor: "pointer", fontSize: "13px", marginBottom: "6px", padding: 0,
                 display: "flex", alignItems: "center", gap: "6px",
                 transition: "color 0.2s"
               }}
-              onMouseEnter={e => e.currentTarget.style.color = "#3b82f6"}
-              onMouseLeave={e => e.currentTarget.style.color = "rgba(148,163,184,0.5)"}
+              onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--text-secondary-2)"}
             >
               ← Change Track / Program
             </button>
@@ -483,14 +483,14 @@ export default function Dashboard() {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 boxShadow: "0 3px 12px rgba(59,130,246,0.25)"
               }}>
-                <span style={{ color: "white", fontSize: "13px", fontWeight: 800, fontStyle: "italic" }}>AIU</span>
+                <span style={{ color: "var(--btn-text)", fontSize: "13px", fontWeight: 800, fontStyle: "italic" }}>AIU</span>
               </div>
               <div>
-                <h1 style={{ color: "white", fontSize: "20px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
+                <h1 style={{ color: "var(--text)", fontSize: "20px", fontWeight: 700, margin: 0, letterSpacing: "-0.3px" }}>
                   {prog.name}{track ? " — " + track.name : ""}
                 </h1>
-                <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", margin: "2px 0 0" }}>
-                  Student: <span style={{ color: "rgba(148,163,184,0.7)" }}>{user}</span>
+                <p style={{ color: "var(--text-secondary-2)", fontSize: "12px", margin: "2px 0 0" }}>
+                  Student: <span style={{ color: "var(--text-secondary)" }}>{user}</span>
                 </p>
               </div>
             </div>
@@ -498,18 +498,18 @@ export default function Dashboard() {
           <div className="page-header-actions" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               style={{
-                padding: "10px", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px",
-                background: "rgba(255,255,255,0.04)", color: "rgba(148,163,184,0.6)", cursor: "pointer",
+                padding: "10px", border: "1px solid var(--card-border)", borderRadius: "10px",
+                background: "var(--card-bg)", color: "var(--text-muted)", cursor: "pointer",
                 display: "flex", transition: "all 0.2s"
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(148,163,184,0.6)"; }}>
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--card-border)"; e.currentTarget.style.color = "var(--btn-text)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <button onClick={() => { saveUserData(); toast("Data saved!"); }}
               style={{
                 padding: "10px 20px", border: "none", borderRadius: "10px",
-                background: "linear-gradient(135deg, #1d4ed8, #3b82f6)", color: "white", cursor: "pointer",
+                background: "var(--accent-gradient-2)", color: "var(--btn-text)", cursor: "pointer",
                 display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 600,
                 boxShadow: "0 4px 16px rgba(59,130,246,0.3)",
                 transition: "all 0.2s"
@@ -518,12 +518,12 @@ export default function Dashboard() {
               onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(59,130,246,0.3)"; }}
             ><Save size={15} /> Save</button>
             <button onClick={logout} style={{
-              padding: "10px", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "10px", background: "rgba(255,255,255,0.04)", color: "rgba(148,163,184,0.6)", cursor: "pointer",
+              padding: "10px", border: "1px solid var(--btn-secondary-border)",
+              borderRadius: "10px", background: "var(--card-bg)", color: "var(--text-muted)", cursor: "pointer",
               transition: "all 0.2s"
             }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(148,163,184,0.6)"; }}
+              onMouseEnter={e => { e.currentTarget.style.background = "var(--card-border)"; e.currentTarget.style.color = "var(--btn-text)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "var(--card-bg)"; e.currentTarget.style.color = "var(--text-muted)"; }}
             ><LogOut size={16} /></button>
           </div>
         </div>
@@ -546,7 +546,7 @@ export default function Dashboard() {
               transition: "all 0.2s"
             }}>
               <p style={{
-                color: "rgba(148,163,184,0.6)", fontSize: "11px", margin: "0 0 10px",
+                color: "var(--text-muted)", fontSize: "11px", margin: "0 0 10px",
                 fontWeight: 500, letterSpacing: "0.5px", textTransform: "uppercase"
               }}>
                 {card.icon} {card.label}
@@ -569,9 +569,9 @@ export default function Dashboard() {
                 padding: "9px 18px", border: "none", borderRadius: "10px", cursor: "pointer",
                 fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap",
                 background: activeSem === sem.number
-                  ? "linear-gradient(135deg, #2563eb, #3b82f6)"
-                  : "rgba(255,255,255,0.04)",
-                color: activeSem === sem.number ? "white" : "rgba(148,163,184,0.6)",
+                  ? "linear-gradient(135deg, var(--accent-dark), var(--accent))"
+                  : "var(--card-bg)",
+                color: activeSem === sem.number ? "var(--btn-text)" : "var(--text-muted)",
                 transition: "all 0.2s",
                 boxShadow: activeSem === sem.number ? "0 4px 12px rgba(59,130,246,0.25)" : "none"
               }}>
@@ -582,8 +582,8 @@ export default function Dashboard() {
             type="text" placeholder="Search course..." value={courseSearch}
             onChange={e => setCourseSearch(e.target.value)}
             style={{
-              padding: "8px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.04)", color: "white", fontSize: "12px",
+              padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--card-border)",
+              background: "var(--card-bg)", color: "var(--text)", fontSize: "12px",
               minWidth: "140px", outline: "none"
             }}
           />
@@ -593,17 +593,17 @@ export default function Dashboard() {
         {/* Courses Table */}
         <div className="course-table" style={{
           background: "rgba(255,255,255,0.02)", borderRadius: "18px",
-          border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden", marginBottom: "16px"
+          border: "1px solid var(--divider-2)", overflow: "hidden", marginBottom: "16px"
         }}>
           <div style={{
-            padding: "18px 22px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+            padding: "18px 22px", borderBottom: "1px solid var(--divider-2)",
             display: "flex", justifyContent: "space-between", alignItems: "center"
           }}>
-            <h3 style={{ color: "white", fontSize: "15px", fontWeight: 600, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-              <BookOpen size={16} color="#3b82f6" />
+            <h3 style={{ color: "var(--text)", fontSize: "15px", fontWeight: 600, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <BookOpen size={16} color="var(--accent)" />
               Semester {activeSem} — GPA: <span style={{ color: "#8b5cf6" }}>{calcSemGPA(activeSem)}</span>
             </h3>
-            <span style={{ color: "rgba(148,163,184,0.3)", fontSize: "11px" }}>
+            <span style={{ color: "var(--text-muted-2)", fontSize: "11px" }}>
               {semCourses ? semCourses.courses.length : 0} courses
             </span>
           </div>
@@ -621,17 +621,17 @@ export default function Dashboard() {
             const isGradProj = item.type === "graduation-project";
             const poolKey = item.slot;
 
-            let badgeColor = "#3b82f6";
+            let badgeColor = "var(--accent)";
             if (isUC) badgeColor = "#8b5cf6";
             if (isUE) badgeColor = "#ec4899";
-            if (isField) badgeColor = "#22c55e";
-            if (isGradProj) badgeColor = "#f59e0b";
-            if (isElective) badgeColor = "#06b6d4";
+            if (isField) badgeColor = "var(--success)";
+            if (isGradProj) badgeColor = "var(--warning)";
+            if (isElective) badgeColor = "var(--badge-text)";
 
             return (
               <div key={item.slot} style={{
                 padding: "14px 22px",
-                borderBottom: idx < semCourses.courses.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                borderBottom: idx < semCourses.courses.length - 1 ? "1px solid var(--divider)" : "none",
                 display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap",
                 transition: "background 0.2s"
               }}
@@ -655,22 +655,22 @@ export default function Dashboard() {
                 {!item.prereq.met && (
                   <span title={"Missing: " + item.prereq.missing.join(", ")}
                     style={{ display: "flex", cursor: "help" }}>
-                    <AlertTriangle size={14} color="#f59e0b" />
+                    <AlertTriangle size={14} color="var(--warning)" />
                   </span>
                 )}
 
                 {/* Course Info */}
                 <div style={{ flex: 1, minWidth: "120px" }}>
-                  <p style={{ color: "white", fontSize: "13px", margin: 0, fontWeight: 500 }}>
+                  <p style={{ color: "var(--text)", fontSize: "13px", margin: 0, fontWeight: 500 }}>
                     {item.code}
                   </p>
-                  <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", margin: "1px 0 0" }}>
+                  <p style={{ color: "var(--text-secondary-2)", fontSize: "12px", margin: "1px 0 0" }}>
                     {courses[item.code]?.name || item.code}
                   </p>
                 </div>
 
                 {/* Credits */}
-                <span style={{ color: "rgba(148,163,184,0.4)", fontSize: "12px", fontWeight: 600, minWidth: "36px" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: 600, minWidth: "36px" }}>
                   {cr} CH
                 </span>
 
@@ -684,13 +684,13 @@ export default function Dashboard() {
                       if (isUE) selectUE(item.slot, e.target.value);
                     }}
                     style={{
-                      padding: "7px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)",
-                      background: "rgba(255,255,255,0.04)", color: "white", fontSize: "12px",
+                      padding: "7px 12px", borderRadius: "8px", border: "1px solid var(--card-border)",
+                      background: "var(--card-bg)", color: "var(--text)", fontSize: "12px",
                       maxWidth: "190px", cursor: "pointer",
                       transition: "border-color 0.2s"
                     }}
                   >
-                    <option value={item.slot} style={{ background: "#1e293b" }}>
+                    <option value={item.slot} style={{ background: "var(--input-bg)" }}>
                       — Select Course —
                     </option>
                     {(() => {
@@ -709,7 +709,7 @@ export default function Dashboard() {
                         pool = univElectPool.map(c => c.code).filter(c => !selectedElsewhere.includes(c));
                       }
                       return pool.map(cCode => (
-                        <option key={cCode} value={cCode} style={{ background: "#1e293b" }}>
+                        <option key={cCode} value={cCode} style={{ background: "var(--input-bg)" }}>
                           {cCode} — {courses[cCode]?.name || cCode}
                         </option>
                       ));
@@ -722,16 +722,16 @@ export default function Dashboard() {
                   value={grade}
                   onChange={e => setGrade(item.code, e.target.value)}
                   style={{
-                    padding: "7px 12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)",
-                    background: grade ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.04)",
-                    color: grade ? "#22c55e" : "rgba(148,163,184,0.6)", fontSize: "12px", fontWeight: 700,
+                    padding: "7px 12px", borderRadius: "8px", border: "1px solid var(--card-border)",
+                    background: grade ? "rgba(34,197,94,0.08)" : "var(--card-bg)",
+                    color: grade ? "var(--success)" : "var(--text-muted)", fontSize: "12px", fontWeight: 700,
                     cursor: "pointer", minWidth: "70px",
                     transition: "all 0.2s"
                   }}
                 >
-                  <option value="" style={{ background: "#1e293b" }}>—</option>
+                  <option value="" style={{ background: "var(--input-bg)" }}>—</option>
                   {gradeOptions.map(g => (
-                    <option key={g} value={g} style={{ background: "#1e293b" }}>{g}</option>
+                    <option key={g} value={g} style={{ background: "var(--input-bg)" }}>{g}</option>
                   ))}
                 </select>
               </div>
@@ -744,8 +744,8 @@ export default function Dashboard() {
           <button onClick={() => setShowResults(true)}
             style={{
               padding: "14px 32px", border: "none", borderRadius: "12px",
-              background: "linear-gradient(135deg, #6d28d9, #8b5cf6)",
-              color: "white", fontSize: "15px", fontWeight: 700, cursor: "pointer",
+              background: "var(--accent-gradient)",
+              color: "var(--btn-text)", fontSize: "15px", fontWeight: 700, cursor: "pointer",
               display: "flex", alignItems: "center", gap: "8px",
               boxShadow: "0 4px 20px rgba(139,92,246,0.35)",
               transition: "all 0.2s"
@@ -757,27 +757,27 @@ export default function Dashboard() {
           </button>
           <button onClick={printReport}
             style={{
-              padding: "14px 24px", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "12px",
-              background: "rgba(59,130,246,0.06)", color: "#60a5fa",
+              padding: "14px 24px", border: "1px solid var(--tab-active-border)", borderRadius: "12px",
+              background: "var(--tab-active-bg)", color: "var(--accent-light)",
               fontSize: "14px", fontWeight: 600, cursor: "pointer",
               display: "flex", alignItems: "center", gap: "8px",
               transition: "all 0.2s"
             }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(59,130,246,0.12)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(59,130,246,0.06)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--tab-active-bg)"; }}
           >
             <Printer size={16} /> Print Report
           </button>
           <button onClick={clearAllData}
             style={{
               padding: "14px 24px", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "12px",
-              background: "rgba(239,68,68,0.06)", color: "#ef4444",
+              background: "var(--danger-bg)", color: "var(--danger)",
               fontSize: "14px", fontWeight: 600, cursor: "pointer",
               display: "flex", alignItems: "center", gap: "8px",
               transition: "all 0.2s"
             }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--danger-bg)"; }}
           >
             <Trash2 size={16} /> Clear All
           </button>
@@ -790,37 +790,37 @@ export default function Dashboard() {
             borderRadius: "18px",
             border: "1px solid rgba(139,92,246,0.15)", padding: "28px", marginBottom: "20px"
           }}>
-            <h3 style={{ color: "white", fontSize: "17px", fontWeight: 600, margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <h3 style={{ color: "var(--text)", fontSize: "17px", fontWeight: 600, margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
               <CheckCircle size={20} color="#8b5cf6" /> GPA Results
             </h3>
             <div style={{
               display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "24px"
             }}>
-              <div style={{ textAlign: "center", padding: "24px", background: "rgba(255,255,255,0.03)", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ color: "rgba(148,163,184,0.6)", fontSize: "11px", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "1px" }}>Cumulative GPA</p>
+              <div style={{ textAlign: "center", padding: "24px", background: "var(--card-bg-2)", borderRadius: "14px", border: "1px solid var(--divider)" }}>
+                <p style={{ color: "var(--text-muted)", fontSize: "11px", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "1px" }}>Cumulative GPA</p>
                 <p style={{
-                  color: cumGPA >= 3.5 ? "#22c55e" : cumGPA >= 2.5 ? "#f59e0b" : "#ef4444",
+                  color: cumGPA >= 3.5 ? "var(--success)" : cumGPA >= 2.5 ? "var(--warning)" : "var(--danger)",
                   fontSize: "42px", fontWeight: 700, margin: 0, letterSpacing: "-2px"
                 }}>{cumGPA.toFixed(2)}</p>
-                <p style={{ color: "rgba(148,163,184,0.4)", fontSize: "12px", margin: "4px 0 0" }}>/ 4.0</p>
+                <p style={{ color: "var(--text-muted)", fontSize: "12px", margin: "4px 0 0" }}>/ 4.0</p>
               </div>
-              <div style={{ textAlign: "center", padding: "24px", background: "rgba(255,255,255,0.03)", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ color: "rgba(148,163,184,0.6)", fontSize: "11px", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "1px" }}>Completed Credits</p>
-                <p style={{ color: "#22c55e", fontSize: "42px", fontWeight: 700, margin: 0, letterSpacing: "-2px" }}>{completedCredits}</p>
-                <p style={{ color: "rgba(148,163,184,0.4)", fontSize: "12px", margin: "4px 0 0" }}>/ {trackOrProg.totalCredits}</p>
+              <div style={{ textAlign: "center", padding: "24px", background: "var(--card-bg-2)", borderRadius: "14px", border: "1px solid var(--divider)" }}>
+                <p style={{ color: "var(--text-muted)", fontSize: "11px", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "1px" }}>Completed Credits</p>
+                <p style={{ color: "var(--success)", fontSize: "42px", fontWeight: 700, margin: 0, letterSpacing: "-2px" }}>{completedCredits}</p>
+                <p style={{ color: "var(--text-muted)", fontSize: "12px", margin: "4px 0 0" }}>/ {trackOrProg.totalCredits}</p>
               </div>
             </div>
 
             {/* Per-semester breakdown */}
-            <h4 style={{ color: "rgba(148,163,184,0.6)", fontSize: "13px", fontWeight: 600, margin: "0 0 14px" }}>Semester Breakdown</h4>
+            <h4 style={{ color: "var(--text-muted)", fontSize: "13px", fontWeight: 600, margin: "0 0 14px" }}>Semester Breakdown</h4>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "10px" }}>
               {semesters.map(sem => (
                 <div key={sem.number} style={{
-                  padding: "14px 10px", background: "rgba(255,255,255,0.03)", borderRadius: "10px", textAlign: "center",
-                  border: "1px solid rgba(255,255,255,0.04)"
+                  padding: "14px 10px", background: "var(--card-bg-2)", borderRadius: "10px", textAlign: "center",
+                  border: "1px solid var(--divider)"
                 }}>
-                  <p style={{ color: "rgba(148,163,184,0.5)", fontSize: "11px", margin: "0 0 6px", fontWeight: 500 }}>Sem {sem.number}</p>
-                  <p style={{ color: "white", fontSize: "18px", fontWeight: 700, margin: 0 }}>
+                  <p style={{ color: "var(--text-secondary-2)", fontSize: "11px", margin: "0 0 6px", fontWeight: 500 }}>Sem {sem.number}</p>
+                  <p style={{ color: "var(--text)", fontSize: "18px", fontWeight: 700, margin: 0 }}>
                     {calcSemGPA(sem.number)}
                   </p>
                 </div>
@@ -828,30 +828,30 @@ export default function Dashboard() {
             </div>
 
             {/* Completed Courses List */}
-            <h4 style={{ color: "rgba(148,163,184,0.6)", fontSize: "13px", fontWeight: 600, margin: "20px 0 12px" }}>Completed Courses</h4>
+            <h4 style={{ color: "var(--text-muted)", fontSize: "13px", fontWeight: 600, margin: "20px 0 12px" }}>Completed Courses</h4>
             <div style={{ display: "grid", gap: "6px" }}>
               {effectiveCourses
                 .filter(({ code }) => getGrade(code) && getGrade(code) !== "F")
                 .map(({ code, semester }) => (
                   <div key={code + semester} style={{
                     display: "flex", justifyContent: "space-between", alignItems: "center",
-                    padding: "10px 14px", background: "rgba(255,255,255,0.03)", borderRadius: "10px",
-                    border: "1px solid rgba(255,255,255,0.04)"
+                    padding: "10px 14px", background: "var(--card-bg-2)", borderRadius: "10px",
+                    border: "1px solid var(--divider)"
                   }}>
                     <div>
-                      <span style={{ color: "white", fontSize: "13px", fontWeight: 500 }}>{code}</span>
-                      <span style={{ color: "rgba(148,163,184,0.5)", fontSize: "12px", marginLeft: "8px" }}>
+                      <span style={{ color: "var(--text)", fontSize: "13px", fontWeight: 500 }}>{code}</span>
+                      <span style={{ color: "var(--text-secondary-2)", fontSize: "12px", marginLeft: "8px" }}>
                         {courses[code]?.name || ""}
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ color: "rgba(148,163,184,0.4)", fontSize: "12px" }}>
+                      <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
                         Sem {semester} · {getCourseCredits(code)} CH
                       </span>
                       <span style={{
                         padding: "2px 10px", borderRadius: "6px",
-                        color: "#22c55e", fontSize: "12px", fontWeight: 700,
-                        background: "rgba(34,197,94,0.1)"
+                        color: "var(--success)", fontSize: "12px", fontWeight: 700,
+                        background: "var(--success-bg)"
                       }}>
                         {getGrade(code)}
                       </span>
@@ -867,11 +867,11 @@ export default function Dashboard() {
           <button onClick={() => setShowWhatIf(!showWhatIf)}
             style={{
               padding: "14px 22px", border: "none", borderRadius: "14px",
-              background: showWhatIf ? "rgba(59,130,246,0.12)" : "rgba(59,130,246,0.06)",
-              color: "#60a5fa", fontSize: "14px", fontWeight: 600, cursor: "pointer",
+              background: showWhatIf ? "rgba(59,130,246,0.12)" : "var(--tab-active-bg)",
+              color: "var(--accent-light)", fontSize: "14px", fontWeight: 600, cursor: "pointer",
               display: "flex", alignItems: "center", gap: "8px", width: "100%",
               transition: "all 0.25s ease",
-              border: showWhatIf ? "1px solid rgba(59,130,246,0.2)" : "1px solid transparent",
+              border: showWhatIf ? "1px solid var(--tab-active-border)" : "1px solid transparent",
             }}>
               <Target size={18} />
               <span style={{ flex: 1, textAlign: "right" }}>What-If Analysis: How to reach a target CGPA?</span>
@@ -882,11 +882,11 @@ export default function Dashboard() {
             <div style={{
               marginTop: "12px", padding: "20px", borderRadius: "16px",
               background: "rgba(59,130,246,0.05)",
-              border: "1px solid rgba(59,130,246,0.15)",
+              border: "1px solid var(--tab-active-bg)",
             }}>
               <p style={{ color: "#94a3b8", fontSize: "13px", margin: "0 0 16px" }}>
-                Current CGPA: <strong style={{ color: "white" }}>{cumGPA.toFixed(2)}</strong>
-                {" | "}Completed Credits: <strong style={{ color: "white" }}>{completedCredits}</strong>
+                Current CGPA: <strong style={{ color: "var(--text)" }}>{cumGPA.toFixed(2)}</strong>
+                {" | "}Completed Credits: <strong style={{ color: "var(--text)" }}>{completedCredits}</strong>
               </p>
 
               <div style={{ display: "flex", gap: "12px", marginBottom: "16px", flexWrap: "wrap", alignItems: "flex-end" }}>
@@ -900,7 +900,7 @@ export default function Dashboard() {
                     style={{
                       width: "100%", padding: "10px 14px", borderRadius: "10px",
                       border: "1px solid rgba(255,255,255,0.15)",
-                      background: "rgba(255,255,255,0.05)", color: "white",
+                      background: "var(--divider)", color: "var(--text)",
                       fontSize: "14px", outline: "none", boxSizing: "border-box",
                     }} />
                 </div>
@@ -914,15 +914,15 @@ export default function Dashboard() {
                     style={{
                       width: "100%", padding: "10px 14px", borderRadius: "10px",
                       border: "1px solid rgba(255,255,255,0.15)",
-                      background: "rgba(255,255,255,0.05)", color: "white",
+                      background: "var(--divider)", color: "var(--text)",
                       fontSize: "14px", outline: "none", boxSizing: "border-box",
                     }} />
                 </div>
                 <button onClick={() => setRunAnalysis(true)}
                   style={{
                     padding: "10px 24px", border: "none", borderRadius: "10px",
-                    background: "linear-gradient(135deg, #3b82f6, #2563eb)",
-                    color: "white", fontSize: "14px", fontWeight: 600,
+                    background: "linear-gradient(135deg, var(--accent), var(--accent-dark))",
+                    color: "var(--btn-text)", fontSize: "14px", fontWeight: 600,
                     cursor: "pointer", display: "flex", alignItems: "center", gap: "6px",
                     whiteSpace: "nowrap",
                   }}>
@@ -931,7 +931,7 @@ export default function Dashboard() {
               </div>
 
               {analysisResult && analysisResult.error && (
-                <div style={{ padding: "12px", background: "rgba(239,68,68,0.1)", borderRadius: "10px", color: "#ef4444", fontSize: "13px" }}>
+                <div style={{ padding: "12px", background: "var(--danger-bg)", borderRadius: "10px", color: "var(--danger)", fontSize: "13px" }}>
                   {analysisResult.error}
                 </div>
               )}
@@ -939,7 +939,7 @@ export default function Dashboard() {
               {analysisResult && !analysisResult.error && !analysisResult.achievable && (
                 <div>
                   <div style={{
-                    padding: "16px", background: "rgba(239,68,68,0.1)", borderRadius: "12px",
+                    padding: "16px", background: "var(--danger-bg)", borderRadius: "12px",
                     border: "1px solid rgba(239,68,68,0.2)", marginBottom: "16px",
                   }}>
                     <p style={{ color: "#f87171", fontSize: "14px", fontWeight: 600, margin: "0 0 8px" }}>
@@ -955,9 +955,9 @@ export default function Dashboard() {
                   {/* Also show best achievable with current planned */}
                   <div style={{
                     padding: "16px", background: "rgba(59,130,246,0.08)", borderRadius: "12px",
-                    border: "1px solid rgba(59,130,246,0.15)",
+                    border: "1px solid var(--tab-active-bg)",
                   }}>
-                    <p style={{ color: "#60a5fa", fontSize: "14px", fontWeight: 600, margin: "0 0 12px" }}>
+                    <p style={{ color: "var(--accent-light)", fontSize: "14px", fontWeight: 600, margin: "0 0 12px" }}>
                       🎯 Improvement plans within {analysisResult.planned} credit hours:
                     </p>
                     {(() => {
@@ -976,7 +976,7 @@ export default function Dashboard() {
                         .sort((a, b) => a.points - b.points);
 
                       if (allLow.length === 0) {
-                        return <p style={{ color: "#64748b", fontSize: "13px" }}>No courses to improve.</p>;
+                        return <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>No courses to improve.</p>;
                       }
 
                       const targets = [
@@ -1034,45 +1034,45 @@ export default function Dashboard() {
                       }
 
                       plans.sort((a, b) => b.gpa - a.gpa);
-                      if (plans.length === 0) return <p style={{ color: "#64748b", fontSize: "13px" }}>No improvement plans fit within {budget} credits.</p>;
+                      if (plans.length === 0) return <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>No improvement plans fit within {budget} credits.</p>;
                       return plans.slice(0, 8).map((plan, i) => (
                         <div key={i} style={{
                           padding: "10px 14px", marginBottom: "6px",
-                          background: "rgba(255,255,255,0.03)", borderRadius: "10px",
-                          border: "1px solid rgba(255,255,255,0.06)",
+                          background: "var(--card-bg-2)", borderRadius: "10px",
+                          border: "1px solid var(--divider-2)",
                         }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                             <span style={{ color: "#94a3b8", fontSize: "11px", fontWeight: 600 }}>Plan {i + 1}</span>
-                            <span style={{ color: "#64748b", fontSize: "11px" }}>{plan.totalCr} CH used</span>
+                            <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>{plan.totalCr} CH used</span>
                           </div>
                           {plan.courses.map((c, j) => (
                             <div key={j} style={{
                               display: "flex", justifyContent: "space-between", alignItems: "center",
-                              padding: "4px 0", borderTop: j > 0 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                              padding: "4px 0", borderTop: j > 0 ? "1px solid var(--divider)" : "none",
                             }}>
                               <div style={{ flex: 1 }}>
-                                <span style={{ color: "white", fontSize: "12px", fontWeight: 500 }}>{c.code}</span>
-                                <span style={{ color: "#64748b", fontSize: "11px", marginLeft: "6px" }}>{c.name}</span>
+                                <span style={{ color: "var(--text)", fontSize: "12px", fontWeight: 500 }}>{c.code}</span>
+                                <span style={{ color: "var(--text-secondary)", fontSize: "11px", marginLeft: "6px" }}>{c.name}</span>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                <span style={{ color: "#ef4444", fontSize: "12px", fontWeight: 600 }}>{c.from}</span>
-                                <span style={{ color: "#64748b", fontSize: "11px" }}>→</span>
-                                <span style={{ color: "#22c55e", fontSize: "12px", fontWeight: 600 }}>{c.to}</span>
-                                <span style={{ color: "#64748b", fontSize: "11px", marginLeft: "4px" }}>({c.credits} CH)</span>
+                                <span style={{ color: "var(--danger)", fontSize: "12px", fontWeight: 600 }}>{c.from}</span>
+                                <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>→</span>
+                                <span style={{ color: "var(--success)", fontSize: "12px", fontWeight: 600 }}>{c.to}</span>
+                                <span style={{ color: "var(--text-secondary)", fontSize: "11px", marginLeft: "4px" }}>({c.credits} CH)</span>
                               </div>
                             </div>
                           ))}
                           <div style={{
                             display: "flex", justifyContent: "space-between", alignItems: "center",
-                            marginTop: "6px", paddingTop: "6px", borderTop: "1px solid rgba(255,255,255,0.06)",
+                            marginTop: "6px", paddingTop: "6px", borderTop: "1px solid var(--divider-2)",
                           }}>
                             <span style={{ color: "#94a3b8", fontSize: "11px" }}>
-                              {cumGPA.toFixed(2)} → <strong style={{ color: plan.gpa >= analysisResult.target ? "#22c55e" : "#fbbf24" }}>{plan.gpa.toFixed(3)}</strong>
+                              {cumGPA.toFixed(2)} → <strong style={{ color: plan.gpa >= analysisResult.target ? "var(--success)" : "#fbbf24" }}>{plan.gpa.toFixed(3)}</strong>
                               {plan.gpa >= analysisResult.target ? " ✅ reaches target" : ""}
                             </span>
                           {(() => {
                             const pct = cumGPA > 0 ? ((plan.gpa - cumGPA) / cumGPA * 100).toFixed(1) + "%" : "—";
-                            return <span style={{ color: "#22c55e", fontSize: "12px", fontWeight: 600 }}>+{pct}</span>;
+                            return <span style={{ color: "var(--success)", fontSize: "12px", fontWeight: 600 }}>+{pct}</span>;
                           })()}
                           </div>
                         </div>
@@ -1085,7 +1085,7 @@ export default function Dashboard() {
               {analysisResult && !analysisResult.error && analysisResult.achievable && (
                 <div>
                   <div style={{
-                    padding: "16px", background: "rgba(34,197,94,0.1)", borderRadius: "12px",
+                    padding: "16px", background: "var(--success-bg)", borderRadius: "12px",
                     border: "1px solid rgba(34,197,94,0.2)", marginBottom: "16px",
                   }}>
                     <p style={{ color: "#4ade80", fontSize: "14px", fontWeight: 600, margin: "0 0 4px" }}>
@@ -1104,30 +1104,30 @@ export default function Dashboard() {
                     {analysisResult.solutions.map((sol, i) => (
                       <div key={i} style={{
                         padding: "10px 14px", borderRadius: "10px",
-                        background: i === 0 ? "rgba(34,197,94,0.08)" : "rgba(255,255,255,0.03)",
+                        background: i === 0 ? "rgba(34,197,94,0.08)" : "var(--card-bg-2)",
                         border: i === 0 ? "1px solid rgba(34,197,94,0.2)" : "1px solid transparent",
                       }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ color: "white", fontSize: "13px", fontWeight: 500 }}>
+                          <span style={{ color: "var(--text)", fontSize: "13px", fontWeight: 500 }}>
                             {sol.desc}
                           </span>
                           <span style={{
-                            color: sol.newGPA >= cumGPA ? "#22c55e" : "#f59e0b",
+                            color: sol.newGPA >= cumGPA ? "var(--success)" : "var(--warning)",
                             fontSize: "14px", fontWeight: "bold",
                           }}>
                             {sol.newGPA.toFixed(3)}
                           </span>
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
-                          <span style={{ color: "#64748b", fontSize: "12px" }}>
+                          <span style={{ color: "var(--text-secondary)", fontSize: "12px" }}>
                             Grade: {sol.grade}
                           </span>
                           <span style={{
-                            color: "#64748b", fontSize: "12px",
+                            color: "var(--text-secondary)", fontSize: "12px",
                           }}>
                           {(() => {
                             const pct2 = cumGPA > 0 ? ((sol.newGPA - cumGPA) * 100 / cumGPA).toFixed(1) + "% improvement" : "—";
-                            return <span style={{ color: "#64748b", fontSize: "12px" }}>+{pct2}</span>;
+                            return <span style={{ color: "var(--text-secondary)", fontSize: "12px" }}>+{pct2}</span>;
                           })()}
                           </span>
                         </div>
@@ -1151,7 +1151,7 @@ export default function Dashboard() {
 
         <div style={{
           textAlign: "center", padding: "32px 0 20px",
-          borderTop: "1px solid rgba(255,255,255,0.04)", marginTop: "8px"
+          borderTop: "1px solid var(--divider)", marginTop: "8px"
         }}>
           <span style={{ color: "rgba(148,163,184,0.25)", fontSize: "12px", letterSpacing: "0.5px" }}>
             AIU GPA Calculator — Alamein International University © {new Date().getFullYear()}

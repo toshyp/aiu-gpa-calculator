@@ -51,17 +51,17 @@ export default function LoginPage() {
 
   const inputStyle = (field) => ({
     width: "100%", padding: "14px 16px 14px 44px",
-    border: focusedField === field ? "1.5px solid #3b82f6" : "1px solid rgba(255,255,255,0.08)",
+    border: focusedField === field ? "1.5px solid var(--accent)" : "1px solid var(--input-border)",
     borderRadius: "12px", fontSize: "15px", outline: "none",
-    background: focusedField === field ? "rgba(59,130,246,0.08)" : "rgba(255,255,255,0.04)",
-    color: "white", boxSizing: "border-box",
+    background: focusedField === field ? "var(--tab-active-bg)" : "var(--input-bg)",
+    color: "var(--text)", boxSizing: "border-box",
     transition: "all 0.25s ease",
   });
 
   return (
     <div className="page-wrapper" style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #0b1120 0%, #0f1f3d 40%, #0b1120 100%)",
+      background: "var(--bg-gradient)",
       display: "flex", alignItems: "center", justifyContent: "center", padding: "20px",
       position: "relative", overflow: "hidden"
     }}>
@@ -85,23 +85,22 @@ export default function LoginPage() {
       </div>
 
       <div className="login-card" style={{
-        background: "rgba(255,255,255,0.04)", backdropFilter: "blur(24px)",
+        background: "var(--card-bg)", backdropFilter: "var(--backdrop)",
         borderRadius: "28px", padding: "48px 44px 40px", width: "100%", maxWidth: "420px",
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.02) inset",
+        border: "1px solid var(--card-border)",
+        boxShadow: "var(--shadow-lg)",
         position: "relative", zIndex: 1
       }}>
-        {/* Theme toggle */}
         <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           style={{
             position: "absolute", top: "16px", right: "16px",
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
+            background: "var(--btn-secondary-bg)", border: "1px solid var(--btn-secondary-border)",
             borderRadius: "10px", padding: "8px", cursor: "pointer",
-            color: "rgba(148,163,184,0.6)", display: "flex",
+            color: "var(--text-muted)", display: "flex",
             transition: "all 0.2s"
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "white"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(148,163,184,0.6)"; }}>
+          onMouseEnter={e => { e.currentTarget.style.background = "var(--btn-secondary-hover)"; e.currentTarget.style.color = "var(--text)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "var(--btn-secondary-bg)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         <div style={{ textAlign: "center", marginBottom: "36px" }}>
@@ -123,13 +122,13 @@ export default function LoginPage() {
             }}>AIU</span>
           </div>
           <h1 style={{
-            color: "white", fontSize: "22px", fontWeight: 700,
+            color: "var(--text)", fontSize: "22px", fontWeight: 700,
             margin: "0 0 4px", letterSpacing: "-0.3px"
           }}>
             GPA Calculator
           </h1>
           <p style={{
-            color: "rgba(148,163,184,0.8)", fontSize: "13px", margin: 0,
+            color: "var(--text-secondary)", fontSize: "13px", margin: 0,
             lineHeight: 1.5
           }}>
             <GraduationCap size={14} style={{ verticalAlign: "middle", marginRight: "4px", opacity: 0.6 }} />
@@ -137,24 +136,24 @@ export default function LoginPage() {
           </p>
           <div style={{
             width: "40px", height: "3px",
-            background: "linear-gradient(90deg, #3b82f6, #8b5cf6)",
+            background: "linear-gradient(90deg, var(--accent), #8b5cf6)",
             borderRadius: "2px", margin: "16px auto 0"
           }} />
         </div>
 
         <div style={{
-          display: "flex", background: "rgba(255,255,255,0.04)",
+          display: "flex", background: "var(--input-bg)",
           borderRadius: "14px", padding: "5px", marginBottom: "28px",
-          border: "1px solid rgba(255,255,255,0.05)"
+          border: "1px solid var(--divider)"
         }}>
           <button onClick={() => { setMode("student"); setError(""); }}
             style={{
               flex: 1, padding: "11px", border: "none", borderRadius: "10px",
               cursor: "pointer", fontSize: "13px", fontWeight: 600,
               background: mode === "student"
-                ? "linear-gradient(135deg, #2563eb, #3b82f6)"
+                ? "var(--accent-gradient-2)"
                 : "transparent",
-              color: mode === "student" ? "white" : "rgba(148,163,184,0.6)",
+              color: mode === "student" ? "var(--btn-text)" : "var(--text-muted)",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
               transition: "all 0.25s ease",
               boxShadow: mode === "student" ? "0 4px 16px rgba(59,130,246,0.3)" : "none"
@@ -166,9 +165,9 @@ export default function LoginPage() {
               flex: 1, padding: "11px", border: "none", borderRadius: "10px",
               cursor: "pointer", fontSize: "13px", fontWeight: 600,
               background: mode === "admin"
-                ? "linear-gradient(135deg, #7c3aed, #8b5cf6)"
+                ? "var(--accent-gradient)"
                 : "transparent",
-              color: mode === "admin" ? "white" : "rgba(148,163,184,0.6)",
+              color: mode === "admin" ? "var(--btn-text)" : "var(--text-muted)",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
               transition: "all 0.25s ease",
               boxShadow: mode === "admin" ? "0 4px 16px rgba(139,92,246,0.3)" : "none"
@@ -179,18 +178,18 @@ export default function LoginPage() {
 
         {mode === "student" && (
           <div style={{
-            display: "flex", background: "rgba(255,255,255,0.04)",
+            display: "flex", background: "var(--input-bg)",
             borderRadius: "10px", padding: "4px", marginBottom: "24px",
-            border: "1px solid rgba(255,255,255,0.05)"
+            border: "1px solid var(--divider)"
           }}>
             <button onClick={() => { setSubMode("signin"); setError(""); }}
               style={{
                 flex: 1, padding: "9px", border: "none", borderRadius: "8px",
                 cursor: "pointer", fontSize: "12px", fontWeight: 600,
                 background: subMode === "signin"
-                  ? "linear-gradient(135deg, #2563eb, #3b82f6)"
+                  ? "var(--accent-gradient-2)"
                   : "transparent",
-                color: subMode === "signin" ? "white" : "rgba(148,163,184,0.6)",
+                color: subMode === "signin" ? "var(--btn-text)" : "var(--text-muted)",
                 transition: "all 0.25s ease",
                 boxShadow: subMode === "signin" ? "0 4px 16px rgba(59,130,246,0.3)" : "none"
               }}>
@@ -202,9 +201,9 @@ export default function LoginPage() {
                 flex: 1, padding: "9px", border: "none", borderRadius: "8px",
                 cursor: "pointer", fontSize: "12px", fontWeight: 600,
                 background: subMode === "register"
-                  ? "linear-gradient(135deg, #2563eb, #3b82f6)"
+                  ? "var(--accent-gradient-2)"
                   : "transparent",
-                color: subMode === "register" ? "white" : "rgba(148,163,184,0.6)",
+                color: subMode === "register" ? "var(--btn-text)" : "var(--text-muted)",
                 transition: "all 0.25s ease",
                 boxShadow: subMode === "register" ? "0 4px 16px rgba(59,130,246,0.3)" : "none"
               }}>
@@ -217,7 +216,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: "18px", position: "relative" }}>
             <label style={{
-              color: "rgba(148,163,184,0.7)", fontSize: "12px",
+              color: "var(--text-secondary)", fontSize: "12px",
               display: "block", marginBottom: "7px", fontWeight: 500,
               letterSpacing: "0.3px", textTransform: "uppercase"
             }}>
@@ -227,7 +226,7 @@ export default function LoginPage() {
               <User size={16} style={{
                 position: "absolute", left: "14px", top: "50%",
                 transform: "translateY(-50%)",
-                color: focusedField === "userId" ? "#3b82f6" : "rgba(148,163,184,0.4)",
+                color: focusedField === "userId" ? "var(--accent)" : "var(--text-muted-2)",
                 transition: "color 0.25s ease", pointerEvents: "none", zIndex: 1
               }} />
               <input
@@ -244,7 +243,7 @@ export default function LoginPage() {
 
           <div style={{ marginBottom: "18px", position: "relative" }}>
             <label style={{
-              color: "rgba(148,163,184,0.7)", fontSize: "12px",
+              color: "var(--text-secondary)", fontSize: "12px",
               display: "block", marginBottom: "7px", fontWeight: 500,
               letterSpacing: "0.3px", textTransform: "uppercase"
             }}>
@@ -254,7 +253,7 @@ export default function LoginPage() {
               <Shield size={16} style={{
                 position: "absolute", left: "14px", top: "50%",
                 transform: "translateY(-50%)",
-                color: focusedField === "password" ? "#8b5cf6" : "rgba(148,163,184,0.4)",
+                color: focusedField === "password" ? "#8b5cf6" : "var(--text-muted-2)",
                 transition: "color 0.25s ease", pointerEvents: "none", zIndex: 1
               }} />
               <input
@@ -272,11 +271,11 @@ export default function LoginPage() {
           {error && (
             <div style={{
               padding: "10px 14px", borderRadius: "10px", marginBottom: "14px",
-              background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)",
+              background: "var(--danger-bg)", border: "1px solid rgba(239,68,68,0.2)",
               display: "flex", alignItems: "center", gap: "8px"
             }}>
-              <span style={{ color: "#ef4444", fontSize: "12px" }}>⚠</span>
-              <p style={{ color: "#fca5a5", fontSize: "13px", margin: 0 }}>{error || loginError}</p>
+              <span style={{ color: "var(--danger)", fontSize: "12px" }}>⚠</span>
+              <p style={{ color: "var(--danger)", fontSize: "13px", margin: 0 }}>{error || loginError}</p>
             </div>
           )}
 
@@ -285,9 +284,9 @@ export default function LoginPage() {
             fontSize: "15px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer",
             letterSpacing: "0.3px", opacity: loading ? 0.7 : 1,
             background: mode === "admin"
-              ? "linear-gradient(135deg, #6d28d9, #8b5cf6)"
-              : "linear-gradient(135deg, #1d4ed8, #3b82f6)",
-            color: "white", display: "flex", alignItems: "center",
+              ? "var(--accent-gradient)"
+              : "var(--accent-gradient-2)",
+            color: "var(--btn-text)", display: "flex", alignItems: "center",
             justifyContent: "center", gap: "10px",
             transition: "all 0.25s ease",
             boxShadow: mode === "admin"
@@ -303,7 +302,7 @@ export default function LoginPage() {
 
           <div style={{
             marginTop: "24px", textAlign: "center",
-            color: "rgba(148,163,184,0.3)", fontSize: "11px",
+            color: "var(--text-muted-2)", fontSize: "11px",
             letterSpacing: "0.5px"
           }}>
             <BookOpen size={12} style={{ verticalAlign: "middle", marginRight: "4px" }} />

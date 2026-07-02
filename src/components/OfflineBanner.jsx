@@ -19,7 +19,7 @@ export default function OfflineBanner() {
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9998,
-      background: "rgba(239,68,68,0.95)", color: "white",
+      background: "var(--danger)", color: "white",
       textAlign: "center", padding: "8px 16px", fontSize: "13px",
       fontWeight: 500, backdropFilter: "blur(8px)"
     }}>

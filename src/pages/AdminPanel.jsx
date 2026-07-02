@@ -47,14 +47,14 @@ export default function AdminPanel() {
   );
 
   if (!user || !user.startsWith("admin_")) {
-    return <div style={{ color: "white", padding: "40px", textAlign: "center" }}>Access Denied</div>;
+    return <div style={{ color: "var(--text)", padding: "40px", textAlign: "center" }}>Access Denied</div>;
   }
 
   const tabStyle = (tab) => ({
     padding: "10px 20px", border: "none", borderRadius: "8px", cursor: "pointer",
     fontSize: "14px", fontWeight: 600,
-    background: activeTab === tab ? "#3b82f6" : "rgba(255,255,255,0.05)",
-    color: activeTab === tab ? "white" : "#64748b",
+    background: activeTab === tab ? "var(--accent)" : "var(--divider)",
+    color: activeTab === tab ? "var(--text)" : "var(--text-secondary)",
     display: "flex", alignItems: "center", gap: "8px"
   });
 
@@ -69,23 +69,23 @@ export default function AdminPanel() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <Shield size={28} color="#8b5cf6" />
             <div>
-              <h1 style={{ color: "white", fontSize: "20px", margin: 0 }}>Admin Panel</h1>
-              <p style={{ color: "#64748b", fontSize: "13px", margin: "2px 0 0" }}>
+              <h1 style={{ color: "var(--text)", fontSize: "20px", margin: 0 }}>Admin Panel</h1>
+              <p style={{ color: "var(--text-secondary)", fontSize: "13px", margin: "2px 0 0" }}>
                 Manage courses, prerequisites & programs
               </p>
             </div>
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            {saved && <span style={{ color: "#22c55e", fontSize: "13px", alignSelf: "center" }}>Saved ✓</span>}
+            {saved && <span style={{ color: "var(--success)", fontSize: "13px", alignSelf: "center" }}>Saved ✓</span>}
             <button onClick={handleSave}
               style={{
                 padding: "10px 20px", border: "none", borderRadius: "10px",
-                background: "#3b82f6", color: "white", cursor: "pointer",
+                background: "var(--accent)", color: "var(--text)", cursor: "pointer",
                 display: "flex", alignItems: "center", gap: "6px", fontSize: "14px"
               }}><Save size={16} /> Save Changes</button>
             <button onClick={logout} style={{
-              padding: "10px", border: "1px solid rgba(255,255,255,0.2)",
-              borderRadius: "10px", background: "transparent", color: "#94a3b8", cursor: "pointer"
+              padding: "10px", border: "1px solid var(--card-border)",
+              borderRadius: "10px", background: "transparent", color: "var(--text-muted)", cursor: "pointer"
             }}><LogOut size={16} /></button>
           </div>
         </div>
@@ -106,7 +106,7 @@ export default function AdminPanel() {
                 borderRadius: "14px", padding: "16px 20px",
                 border: `1px solid ${card.color}15`
               }}>
-                <p style={{ color: "#64748b", fontSize: "11px", margin: "0 0 6px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                <p style={{ color: "var(--text-secondary)", fontSize: "11px", margin: "0 0 6px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   {card.label}
                 </p>
                 <p style={{ color: card.color, fontSize: "26px", fontWeight: 700, margin: 0 }}>
@@ -147,20 +147,20 @@ export default function AdminPanel() {
                 type="text" placeholder="Search courses..."
                 value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                 style={{
-                  width: "100%", padding: "12px 16px", border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: "12px", background: "rgba(255,255,255,0.05)",
-                  color: "white", fontSize: "14px", outline: "none", boxSizing: "border-box"
+                  width: "100%", padding: "12px 16px", border: "1px solid var(--btn-secondary-border)",
+                  borderRadius: "12px", background: "var(--divider)",
+                  color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box"
                 }}
               />
             </div>
             <div className="admin-grid-scroll" style={{
-              background: "rgba(255,255,255,0.03)", borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden"
+              background: "var(--card-bg-2)", borderRadius: "16px",
+              border: "1px solid var(--card-border)", overflow: "hidden"
             }}>
               <div className="admin-grid-scroll-inner" style={{
                 display: "grid", gridTemplateColumns: "100px 1fr 80px",
-                padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
-                color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
+                padding: "12px 20px", borderBottom: "1px solid var(--card-border)",
+                color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
               }}>
                 <span>Code</span>
                 <span>Course Name</span>
@@ -169,15 +169,15 @@ export default function AdminPanel() {
               {filteredCourses.map(c => (
                 <div key={c.code} style={{
                   display: "grid", gridTemplateColumns: "100px 1fr 80px",
-                  padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  padding: "10px 20px", borderBottom: "1px solid var(--divider)",
                   alignItems: "center"
                 }}>
-                  <span style={{ color: "#3b82f6", fontSize: "13px", fontWeight: 600 }}>{c.code}</span>
+                  <span style={{ color: "var(--accent)", fontSize: "13px", fontWeight: 600 }}>{c.code}</span>
                   <input value={getCourseName(c.code)}
                     onChange={e => setCourseOverrides(prev => ({ ...prev, [c.code]: { ...prev[c.code], name: e.target.value } }))}
                     style={{
-                      padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)",
-                      background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px", width: "100%", boxSizing: "border-box"
+                      padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)",
+                      background: "var(--divider)", color: "var(--text)", fontSize: "13px", width: "100%", boxSizing: "border-box"
                     }} />
                   <input
                     type="number" value={courseOverrides[c.code]?.credits !== undefined ? courseOverrides[c.code].credits : c.credits}
@@ -187,8 +187,8 @@ export default function AdminPanel() {
                     }}
                     style={{
                       width: "60px", padding: "4px 8px", borderRadius: "6px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px",
+                      border: "1px solid var(--btn-secondary-border)",
+                      background: "var(--divider)", color: "var(--text)", fontSize: "13px",
                       textAlign: "center"
                     }}
                   />
@@ -201,13 +201,13 @@ export default function AdminPanel() {
         {/* Prerequisites Tab */}
         {activeTab === "prerequisites" && (
           <div style={{
-            background: "rgba(255,255,255,0.03)", borderRadius: "16px",
-            border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: "16px"
+            background: "var(--card-bg-2)", borderRadius: "16px",
+            border: "1px solid var(--card-border)", overflow: "hidden", marginBottom: "16px"
           }}>
           <div style={{
             display: "grid", gridTemplateColumns: "100px 1fr",
-            padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
-            color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
+            padding: "12px 20px", borderBottom: "1px solid var(--card-border)",
+            color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
           }}>
             <span>Course</span>
             <span>Prerequisites</span>
@@ -215,24 +215,24 @@ export default function AdminPanel() {
           {Object.entries(prereqData).sort().map(([code, prereqs]) => (
             <div key={code} style={{
               display: "grid", gridTemplateColumns: "100px 1fr",
-              padding: "6px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+              padding: "6px 20px", borderBottom: "1px solid var(--divider)",
               alignItems: "start"
             }}>
-                <span style={{ color: "#3b82f6", fontSize: "13px", fontWeight: 600, paddingTop: "4px" }}>{code}</span>
+                <span style={{ color: "var(--accent)", fontSize: "13px", fontWeight: 600, paddingTop: "4px" }}>{code}</span>
                 <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", paddingTop: "4px" }}>
                   {prereqs.length === 0 && (
-                    <span style={{ color: "#475569", fontSize: "11px", fontStyle: "italic" }}>None</span>
+                    <span style={{ color: "var(--text-secondary-2)", fontSize: "11px", fontStyle: "italic" }}>None</span>
                   )}
                   {prereqs.map(p => (
                     <span key={p} style={{
                       display: "inline-flex", alignItems: "center", gap: "4px",
                       padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
                       background: p === "SENIOR_STANDING" ? "rgba(245,158,11,0.15)" : "rgba(59,130,246,0.15)",
-                      color: p === "SENIOR_STANDING" ? "#f59e0b" : "#3b82f6"
+                      color: p === "SENIOR_STANDING" ? "var(--warning)" : "var(--accent)"
                     }}>
                       {p}
                       <button onClick={() => removePrereq(code, p)}
-                        style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: 0, display: "flex", fontSize: "11px" }}>
+                        style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", padding: 0, display: "flex", fontSize: "11px" }}>
                         <X size={10} />
                       </button>
                     </span>
@@ -246,33 +246,33 @@ export default function AdminPanel() {
         {/* Add New Prerequisite */}
         {activeTab === "prerequisites" && (
           <div style={{
-            background: "rgba(255,255,255,0.03)", borderRadius: "16px",
-            border: "1px solid rgba(255,255,255,0.08)", padding: "16px 20px"
+            background: "var(--card-bg-2)", borderRadius: "16px",
+            border: "1px solid var(--card-border)", padding: "16px 20px"
           }}>
-            <h3 style={{ color: "white", fontSize: "14px", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Plus size={16} color="#3b82f6" /> Add / Edit Prerequisite
+            <h3 style={{ color: "var(--text)", fontSize: "14px", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Plus size={16} color="var(--accent)" /> Add / Edit Prerequisite
             </h3>
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "flex-end" }}>
               <div>
-                <label style={{ color: "#64748b", fontSize: "11px", display: "block", marginBottom: "4px" }}>Course Code</label>
+                <label style={{ color: "var(--text-secondary)", fontSize: "11px", display: "block", marginBottom: "4px" }}>Course Code</label>
                 <input placeholder="e.g. CSE494" value={prereqCourse}
                   onChange={e => setPrereqCourse(e.target.value.toUpperCase())}
                   list="courseCodes"
-                  style={{ width: "120px", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px" }} />
+                  style={{ width: "120px", padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--text)", fontSize: "13px" }} />
               </div>
               <div>
-                <label style={{ color: "#64748b", fontSize: "11px", display: "block", marginBottom: "4px" }}>Prerequisite Code</label>
+                <label style={{ color: "var(--text-secondary)", fontSize: "11px", display: "block", marginBottom: "4px" }}>Prerequisite Code</label>
                 <input placeholder="e.g. CSE493" value={prereqValue}
                   onChange={e => setPrereqValue(e.target.value.toUpperCase())}
                   list="prereqCodes"
-                  style={{ width: "120px", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px" }} />
+                  style={{ width: "120px", padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--text)", fontSize: "13px" }} />
               </div>
               <button onClick={() => {
                 if (prereqCourse.trim() && prereqValue.trim()) {
                   addPrereq(prereqCourse.trim(), prereqValue.trim());
                   setPrereqValue("");
                 }
-              }} style={{ padding: "6px 16px", border: "none", borderRadius: "8px", background: "#3b82f6", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+              }} style={{ padding: "6px 16px", border: "none", borderRadius: "8px", background: "var(--accent)", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
                 <Plus size={14} /> Add
               </button>
             </div>
@@ -283,8 +283,8 @@ export default function AdminPanel() {
               {Object.keys(courses).map(c => <option key={c} value={c} />)}
               <option value="SENIOR_STANDING" />
             </datalist>
-            <p style={{ color: "#475569", fontSize: "11px", margin: "8px 0 0" }}>
-              Tip: Use <strong style={{ color: "#f59e0b" }}>SENIOR_STANDING</strong> for courses that require senior year status.
+            <p style={{ color: "var(--text-secondary-2)", fontSize: "11px", margin: "8px 0 0" }}>
+              Tip: Use <strong style={{ color: "var(--warning)" }}>SENIOR_STANDING</strong> for courses that require senior year status.
             </p>
           </div>
         )}
@@ -292,13 +292,13 @@ export default function AdminPanel() {
         {/* Programs Tab */}
         {activeTab === "programs" && (
           <div style={{
-            background: "rgba(255,255,255,0.03)", borderRadius: "16px",
-            border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden"
+            background: "var(--card-bg-2)", borderRadius: "16px",
+            border: "1px solid var(--card-border)", overflow: "hidden"
           }}>
             <div style={{
               display: "grid", gridTemplateColumns: "1fr 80px 60px",
-              padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
-              color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
+              padding: "12px 20px", borderBottom: "1px solid var(--card-border)",
+              color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
             }}>
               <span>Program</span>
               <span>Credits</span>
@@ -306,18 +306,18 @@ export default function AdminPanel() {
             </div>
             {Object.values(programs).map(p => (
               <div key={p.id} style={{
-                padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)"
+                padding: "12px 20px", borderBottom: "1px solid var(--divider)"
               }}>
                 <div style={{
                   display: "grid", gridTemplateColumns: "1fr 80px 60px",
                   alignItems: "center"
                 }}>
                   <div>
-                    <p style={{ color: "white", fontSize: "14px", margin: 0, fontWeight: 500 }}>{p.name}</p>
-                    <p style={{ color: "#64748b", fontSize: "12px", margin: "2px 0 0" }}>{p.department}</p>
+                    <p style={{ color: "var(--text)", fontSize: "14px", margin: 0, fontWeight: 500 }}>{p.name}</p>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "12px", margin: "2px 0 0" }}>{p.department}</p>
                   </div>
-                  <span style={{ color: "#3b82f6", fontSize: "14px", fontWeight: 600 }}>{p.totalCredits}</span>
-                  <span style={{ color: "#94a3b8", fontSize: "13px" }}>
+                  <span style={{ color: "var(--accent)", fontSize: "14px", fontWeight: 600 }}>{p.totalCredits}</span>
+                  <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>
                     {p.hasTracks && p.tracks ? Object.keys(p.tracks).length : "—"}
                   </span>
                 </div>
@@ -326,7 +326,7 @@ export default function AdminPanel() {
                     {Object.values(p.tracks).map(t => (
                       <span key={t.id} style={{
                         padding: "2px 10px", borderRadius: "6px", fontSize: "11px",
-                        background: "rgba(6,182,212,0.1)", color: "#06b6d4"
+                        background: "var(--badge-bg)", color: "var(--badge-text)"
                       }}>
                         {t.name}
                       </span>
@@ -342,18 +342,18 @@ export default function AdminPanel() {
         {activeTab === "pools" && (
           <div>
             {/* UC Pool */}
-            <h3 style={{ color: "white", fontSize: "16px", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <h3 style={{ color: "var(--text)", fontSize: "16px", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
               <BookOpen size={18} color="#8b5cf6" /> University Requirements Pool (UC)
-              <span style={{ color: "#64748b", fontSize: "12px", fontWeight: 400 }}>(2 CH each)</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: "12px", fontWeight: 400 }}>(2 CH each)</span>
             </h3>
             <div className="admin-grid-scroll" style={{
-              background: "rgba(255,255,255,0.03)", borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: "24px"
+              background: "var(--card-bg-2)", borderRadius: "16px",
+              border: "1px solid var(--card-border)", overflow: "hidden", marginBottom: "24px"
             }}>
               <div className="admin-grid-scroll-inner" style={{
                 display: "grid", gridTemplateColumns: "100px 1fr 80px 50px",
-                padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
-                color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
+                padding: "12px 20px", borderBottom: "1px solid var(--card-border)",
+                color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
               }}>
                 <span>Code</span>
                 <span>Course Name</span>
@@ -363,16 +363,16 @@ export default function AdminPanel() {
               {ucPool.map(c => (
                 <div key={c.code} style={{
                   display: "grid", gridTemplateColumns: "100px 1fr 80px 50px",
-                  padding: "8px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  padding: "8px 20px", borderBottom: "1px solid var(--divider)",
                   alignItems: "center"
                 }}>
                   <input value={c.code} onChange={e => updateUcPool(c.code, "code", e.target.value)}
-                    style={{ width: "90px", padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#3b82f6", fontSize: "13px", fontWeight: 600 }} />
+                    style={{ width: "90px", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--accent)", fontSize: "13px", fontWeight: 600 }} />
                   <input value={c.name} onChange={e => updateUcPool(c.code, "name", e.target.value)}
-                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px" }} />
-                  <span style={{ color: "#94a3b8", fontSize: "13px", textAlign: "center" }}>2</span>
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--text)", fontSize: "13px" }} />
+                  <span style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center" }}>2</span>
                   <button onClick={() => removeFromUcPool(c.code)}
-                    style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px" }}>
+                    style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", padding: "4px" }}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -380,32 +380,32 @@ export default function AdminPanel() {
               {/* Add new UC */}
               <div style={{ padding: "12px 20px", display: "flex", gap: "8px" }}>
                 <input placeholder="Code" value={newUcCode} onChange={e => setNewUcCode(e.target.value)}
-                  style={{ width: "100px", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px" }} />
+                  style={{ width: "100px", padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--text)", fontSize: "13px" }} />
                 <input placeholder="Course Name" value={newUcName} onChange={e => setNewUcName(e.target.value)}
-                  style={{ flex: 1, padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px" }} />
+                  style={{ flex: 1, padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--text)", fontSize: "13px" }} />
                 <button onClick={() => {
                   const code = newUcCode.trim();
                   const name = newUcName.trim();
                   if (code && name) { addToUcPool({ code, name }); setNewUcCode(""); setNewUcName(""); }
-                }} style={{ padding: "6px 16px", border: "none", borderRadius: "8px", background: "#3b82f6", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+                }} style={{ padding: "6px 16px", border: "none", borderRadius: "8px", background: "var(--accent)", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
                   <Plus size={14} /> Add
                 </button>
               </div>
             </div>
 
             {/* UE Pool */}
-            <h3 style={{ color: "white", fontSize: "16px", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <h3 style={{ color: "var(--text)", fontSize: "16px", margin: "0 0 12px", display: "flex", alignItems: "center", gap: "8px" }}>
               <BookOpen size={18} color="#ec4899" /> University Elective Pool (UE)
-              <span style={{ color: "#64748b", fontSize: "12px", fontWeight: 400 }}>(2 CH each)</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: "12px", fontWeight: 400 }}>(2 CH each)</span>
             </h3>
             <div className="admin-grid-scroll" style={{
-              background: "rgba(255,255,255,0.03)", borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: "24px"
+              background: "var(--card-bg-2)", borderRadius: "16px",
+              border: "1px solid var(--card-border)", overflow: "hidden", marginBottom: "24px"
             }}>
               <div className="admin-grid-scroll-inner" style={{
                 display: "grid", gridTemplateColumns: "100px 1fr 80px 50px",
-                padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
-                color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
+                padding: "12px 20px", borderBottom: "1px solid var(--card-border)",
+                color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
               }}>
                 <span>Code</span>
                 <span>Course Name</span>
@@ -415,16 +415,16 @@ export default function AdminPanel() {
               {uePool.map(c => (
                 <div key={c.code} style={{
                   display: "grid", gridTemplateColumns: "100px 1fr 80px 50px",
-                  padding: "8px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  padding: "8px 20px", borderBottom: "1px solid var(--divider)",
                   alignItems: "center"
                 }}>
                   <input value={c.code} onChange={e => updateUePool(c.code, "code", e.target.value)}
-                    style={{ width: "90px", padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "#ec4899", fontSize: "13px", fontWeight: 600 }} />
+                    style={{ width: "90px", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "#ec4899", fontSize: "13px", fontWeight: 600 }} />
                   <input value={c.name} onChange={e => updateUePool(c.code, "name", e.target.value)}
-                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px" }} />
-                  <span style={{ color: "#94a3b8", fontSize: "13px", textAlign: "center" }}>2</span>
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--text)", fontSize: "13px" }} />
+                  <span style={{ color: "var(--text-muted)", fontSize: "13px", textAlign: "center" }}>2</span>
                   <button onClick={() => removeFromUePool(c.code)}
-                    style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px" }}>
+                    style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", padding: "4px" }}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -432,14 +432,14 @@ export default function AdminPanel() {
               {/* Add new UE */}
               <div style={{ padding: "12px 20px", display: "flex", gap: "8px" }}>
                 <input placeholder="Code" value={newUeCode} onChange={e => setNewUeCode(e.target.value)}
-                  style={{ width: "100px", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px" }} />
+                  style={{ width: "100px", padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--text)", fontSize: "13px" }} />
                 <input placeholder="Course Name" value={newUeName} onChange={e => setNewUeName(e.target.value)}
-                  style={{ flex: 1, padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: "13px" }} />
+                  style={{ flex: 1, padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--btn-secondary-border)", background: "var(--divider)", color: "var(--text)", fontSize: "13px" }} />
                 <button onClick={() => {
                   const code = newUeCode.trim();
                   const name = newUeName.trim();
                   if (code && name) { addToUePool({ code, name }); setNewUeCode(""); setNewUeName(""); }
-                }} style={{ padding: "6px 16px", border: "none", borderRadius: "8px", background: "#ec4899", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+                }} style={{ padding: "6px 16px", border: "none", borderRadius: "8px", background: "#ec4899", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
                   <Plus size={14} /> Add
                 </button>
               </div>
@@ -451,13 +451,13 @@ export default function AdminPanel() {
         {activeTab === "students" && (
           <div>
             <div className="admin-grid-scroll" style={{
-              background: "rgba(255,255,255,0.03)", borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: "16px"
+              background: "var(--card-bg-2)", borderRadius: "16px",
+              border: "1px solid var(--card-border)", overflow: "hidden", marginBottom: "16px"
             }}>
               <div className="admin-grid-scroll-inner" style={{
                 display: "grid", gridTemplateColumns: "120px 1fr 180px 100px",
-                padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)",
-                color: "#64748b", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
+                padding: "12px 20px", borderBottom: "1px solid var(--card-border)",
+                color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
               }}>
                 <span>Student ID</span>
                 <span>Registered</span>
@@ -465,7 +465,7 @@ export default function AdminPanel() {
                 <span></span>
               </div>
               {allStudents.length === 0 && (
-                <div style={{ padding: "24px 20px", textAlign: "center", color: "#475569", fontSize: "13px" }}>
+                <div style={{ padding: "24px 20px", textAlign: "center", color: "var(--text-secondary-2)", fontSize: "13px" }}>
                   No registered students yet.
                 </div>
               )}
@@ -473,21 +473,21 @@ export default function AdminPanel() {
                 <div key={s.student_id}>
                   <div style={{
                     display: "grid", gridTemplateColumns: "120px 1fr 180px 100px",
-                    padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    padding: "10px 20px", borderBottom: "1px solid var(--divider)",
                     alignItems: "center"
                   }}>
-                    <span style={{ color: "#3b82f6", fontSize: "13px", fontWeight: 600 }}>{s.student_id}</span>
-                    <span style={{ color: "#94a3b8", fontSize: "12px" }}>
+                    <span style={{ color: "var(--accent)", fontSize: "13px", fontWeight: 600 }}>{s.student_id}</span>
+                    <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
                       {s.created_at ? new Date(s.created_at).toLocaleString() : "—"}
                     </span>
-                    <span style={{ color: "#94a3b8", fontSize: "12px" }}>
+                    <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
                       {s.last_login ? new Date(s.last_login).toLocaleString() : "Never"}
                     </span>
                     <div style={{ display: "flex", gap: "6px" }}>
                       <button onClick={() => viewStudentDetails(s.student_id)}
                         style={{
                           padding: "4px 10px", border: "1px solid rgba(59,130,246,0.3)", borderRadius: "6px",
-                          background: "rgba(59,130,246,0.1)", color: "#3b82f6", cursor: "pointer",
+                          background: "var(--tab-active-bg)", color: "var(--accent)", cursor: "pointer",
                           fontSize: "11px", display: "flex", alignItems: "center", gap: "4px"
                         }}>
                         {studentDetails?.studentId === s.student_id ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
@@ -500,7 +500,7 @@ export default function AdminPanel() {
                       }}
                         style={{
                           padding: "4px 10px", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "6px",
-                          background: "rgba(239,68,68,0.1)", color: "#ef4444", cursor: "pointer",
+                          background: "rgba(239,68,68,0.1)", color: "var(--danger)", cursor: "pointer",
                           fontSize: "11px"
                         }}>
                         <Trash2 size={11} />
@@ -511,30 +511,30 @@ export default function AdminPanel() {
                     <div style={{
                       padding: "16px 20px 16px 40px",
                       background: "rgba(255,255,255,0.02)",
-                      borderBottom: "1px solid rgba(255,255,255,0.05)"
+                      borderBottom: "1px solid var(--divider)"
                     }}>
-                      <div style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "8px" }}>
+                      <div style={{ color: "var(--text-muted)", fontSize: "12px", marginBottom: "8px" }}>
                         Grades ({studentDetails.grades.length}):
                       </div>
                       {studentDetails.grades.length === 0 ? (
-                        <span style={{ color: "#475569", fontSize: "11px", fontStyle: "italic" }}>No grades recorded</span>
+                        <span style={{ color: "var(--text-secondary-2)", fontSize: "11px", fontStyle: "italic" }}>No grades recorded</span>
                       ) : (
                         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
                           {studentDetails.grades.map(g => (
                             <span key={g.course_code} style={{
                               padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
-                              background: "rgba(59,130,246,0.1)", color: "#3b82f6"
+                              background: "var(--tab-active-bg)", color: "var(--accent)"
                             }}>
                               {g.course_code}: {g.grade}
                             </span>
                           ))}
                         </div>
                       )}
-                      <div style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "8px" }}>
+                      <div style={{ color: "var(--text-muted)", fontSize: "12px", marginBottom: "8px" }}>
                         UC Selections ({studentDetails.ucSelections.length}):
                       </div>
                       {studentDetails.ucSelections.length === 0 ? (
-                        <span style={{ color: "#475569", fontSize: "11px", fontStyle: "italic" }}>None</span>
+                        <span style={{ color: "var(--text-secondary-2)", fontSize: "11px", fontStyle: "italic" }}>None</span>
                       ) : (
                         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
                           {studentDetails.ucSelections.map(s => (
@@ -547,11 +547,11 @@ export default function AdminPanel() {
                           ))}
                         </div>
                       )}
-                      <div style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "8px" }}>
+                      <div style={{ color: "var(--text-muted)", fontSize: "12px", marginBottom: "8px" }}>
                         UE Selections ({studentDetails.ueSelections.length}):
                       </div>
                       {studentDetails.ueSelections.length === 0 ? (
-                        <span style={{ color: "#475569", fontSize: "11px", fontStyle: "italic" }}>None</span>
+                        <span style={{ color: "var(--text-secondary-2)", fontSize: "11px", fontStyle: "italic" }}>None</span>
                       ) : (
                         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                           {studentDetails.ueSelections.map(s => (
@@ -576,37 +576,37 @@ export default function AdminPanel() {
         {activeTab === "account" && (
           <div style={{
             maxWidth: "400px", margin: "0 auto",
-            background: "rgba(255,255,255,0.03)", borderRadius: "16px",
-            border: "1px solid rgba(255,255,255,0.08)", padding: "24px"
+            background: "var(--card-bg-2)", borderRadius: "16px",
+            border: "1px solid var(--card-border)", padding: "24px"
           }}>
-            <h3 style={{ color: "white", fontSize: "16px", margin: "0 0 16px" }}>
+            <h3 style={{ color: "var(--text)", fontSize: "16px", margin: "0 0 16px" }}>
               Admin Account Settings
             </h3>
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ color: "#94a3b8", fontSize: "13px", display: "block", marginBottom: "6px" }}>
+              <label style={{ color: "var(--text-muted)", fontSize: "13px", display: "block", marginBottom: "6px" }}>
                 Username
               </label>
               <input
                 type="text" value={adminAccount.username}
                 onChange={e => setAdminAccount({ ...adminAccount, username: e.target.value })}
                 style={{
-                  width: "100%", padding: "10px 14px", border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: "10px", background: "rgba(255,255,255,0.05)",
-                  color: "white", fontSize: "14px", outline: "none", boxSizing: "border-box"
+                  width: "100%", padding: "10px 14px", border: "1px solid var(--btn-secondary-border)",
+                  borderRadius: "10px", background: "var(--divider)",
+                  color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box"
                 }}
               />
             </div>
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ color: "#94a3b8", fontSize: "13px", display: "block", marginBottom: "6px" }}>
+              <label style={{ color: "var(--text-muted)", fontSize: "13px", display: "block", marginBottom: "6px" }}>
                 Password
               </label>
               <input
                 type="password" value={adminAccount.password}
                 onChange={e => setAdminAccount({ ...adminAccount, password: e.target.value })}
                 style={{
-                  width: "100%", padding: "10px 14px", border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: "10px", background: "rgba(255,255,255,0.05)",
-                  color: "white", fontSize: "14px", outline: "none", boxSizing: "border-box"
+                  width: "100%", padding: "10px 14px", border: "1px solid var(--btn-secondary-border)",
+                  borderRadius: "10px", background: "var(--divider)",
+                  color: "var(--text)", fontSize: "14px", outline: "none", boxSizing: "border-box"
                 }}
               />
             </div>

@@ -21,7 +21,7 @@ const AppContent = () => {
 
   return (
     <ErrorBoundary>
-      <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0b1120", display: "flex", alignItems: "center", justifyContent: "center" }}><Spinner size={36} color="#3b82f6" text="Loading..." /></div>}>
+      <Suspense fallback={<div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}><Spinner size={36} color="var(--accent)" text="Loading..." /></div>}>
         {user.startsWith("admin_") ? <AdminPanel /> : <Dashboard />}
       </Suspense>
     </ErrorBoundary>
