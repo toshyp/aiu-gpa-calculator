@@ -85,6 +85,38 @@ async function run() {
   });
   await p2.close();
 
+  // ====== Test: Second save after edit preserves changes ======
+  await test("Second save after edit preserves changes", async () => {
+    const p2b = await createSession({
+      grades: { "MAT111": "A+", "MAT123": "A" },
+      ucSelections: {},
+      ueSelections: {},
+      electiveSelections: {},
+      completedCourses: {},
+      semesterStatus: {}
+    });
+    await wait(1500);
+
+    // Simulate editing a grade (as if user changed MAT111 from A+ to A-)
+    await p2b.evaluate((u) => {
+      const stored = JSON.parse(localStorage.getItem(`grades_${u}`));
+      stored.grades["MAT111"] = "A-";
+      localStorage.setItem(`grades_${u}`, JSON.stringify(stored));
+    }, TEST_USER);
+
+    // Refresh — the edit should survive
+    await p2b.reload({ waitUntil: "networkidle" });
+    await wait(2000);
+
+    const afterEdit = await p2b.evaluate((u) => {
+      const d = localStorage.getItem(`grades_${u}`);
+      return d ? JSON.parse(d) : null;
+    }, TEST_USER);
+    if (afterEdit?.grades?.["MAT111"] !== "A-")
+      throw new Error("Second save lost: MAT111 should be A- but got " + afterEdit?.grades?.["MAT111"]);
+    await p2b.close();
+  });
+
   // ====== TEST 3: Grade migration from slot code to course code ======
   console.log("\n=== Test 3: Grade migration slot->course ===");
   const p3 = await createSession({

@@ -180,8 +180,8 @@ export function AppProvider({ children }) {
         } catch (e) {
           console.error("Failed to parse stored grades data:", e);
         }
-      }
-      if (supabaseAvailable) {
+      } else if (supabaseAvailable) {
+        // Only load from Supabase when localStorage is empty
         loadFromDb(user);
       }
       setDataLoaded(true);
@@ -416,8 +416,7 @@ export function AppProvider({ children }) {
   }
 
   function setGrade(code, grade) {
-    const updated = { ...grades, [code]: grade };
-    setGrades(updated);
+    setGrades(prev => ({ ...prev, [code]: grade }));
   }
 
   function selectElective(slot, courseCode) {
