@@ -60,51 +60,45 @@ export default function Dashboard() {
   }
 
   function parseReportText(text) {
+    return findGradesInText(text, new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]));
+  }
+
+  function findGradesInText(text, gradeSet) {
     const grades = {};
-    const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
-    const clean = t => t.replace(/[^A-Za-z0-9+-]/g, "").toUpperCase();
-    const cleanGrade = t => {
-      let c = clean(t);
+    const cleanG = t => {
+      if (!t) return null;
+      let c = t.replace(/[^A-Za-z0-9+-]/g, "").toUpperCase();
       if (gradeSet.has(c)) return c;
-      c = c.replace(/O/g,"0").replace(/l/g,"1").replace(/I/g,"1").replace(/B/g,"8").replace(/S/g,"5");
+      c = c.replace(/O/g,"0").replace(/l/g,"1").replace(/I/g,"1");
       c = c.replace(/4/g,"+").replace(/[^\w+-]/g,"");
-      for (const g of gradeSet)
-        if (c.includes(g.replace(/[^\w]/g,"")) || g.replace(/[^\w]/g,"").includes(c))
-          return g;
+      for (const g of gradeSet) {
+        const p = g.replace(/[^\w]/g,"");
+        if (c === p || (c.length >= p.length && c.includes(p))) return g;
+      }
       return null;
     };
-    function extractGradesFromLine(tokens, codeIdx) {
-      for (let j = Math.max(0, codeIdx - 3); j < Math.min(tokens.length, codeIdx + 15); j++) {
-        if (j === codeIdx) continue;
-        const g = cleanGrade(tokens[j]);
-        if (g) return g;
-        if (j + 1 < tokens.length) {
-          const combo = cleanGrade(tokens[j] + tokens[j + 1]);
-          if (combo) return combo;
+    const norm = text.replace(/\r\n/g,"\n").replace(/[–—−]/g,"-");
+    const findGradeIn = (ctx) => {
+      const toks = ctx.replace(/\n/g," ").split(/\s+/);
+      let best = null, bestLen = 0;
+      for (let i = 0; i < toks.length; i++) {
+        for (let k = 0; k <= 2 && i + k < toks.length; k++) {
+          const g = cleanG(toks.slice(i, i + k + 1).join(""));
+          if (g && g.length > bestLen) { best = g; bestLen = g.length; }
         }
       }
-      return null;
-    }
-    const lines = text.split("\n");
-    for (const line of lines) {
-      const tokens = line.trim().split(/\s+/);
-      for (let i = 0; i < tokens.length; i++) {
-        let code = clean(tokens[i]);
-        if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-          const g = extractGradesFromLine(tokens, i);
-          if (g) grades[code] = g;
-        }
-        if (i + 1 < tokens.length && /^[A-Z]{3,4}$/.test(tokens[i].toUpperCase())) {
-          const digits = tokens[i + 1].replace(/[^0-9]/g, "");
-          if (digits.length >= 2 && digits.length <= 4) {
-            code = tokens[i].toUpperCase() + digits;
-            if (!grades[code] && /^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-              const g = extractGradesFromLine(tokens, i + 1);
-              if (g) grades[code] = g;
-            }
-          }
-        }
-      }
+      return best;
+    };
+    const codeRegex = /([A-Za-z]{3,4})\s*(\d{2,4})/g;
+    let match;
+    while ((match = codeRegex.exec(norm)) !== null) {
+      const code = (match[1] + match[2]).toUpperCase();
+      if (!/^[A-Z]{3,4}\d{2,4}$/.test(code)) continue;
+      if (grades[code]) continue;
+      const start = Math.max(0, match.index - 50);
+      const end = Math.min(norm.length, match.index + match[0].length + 120);
+      const g = findGradeIn(norm.slice(start, end));
+      if (g) grades[code] = g;
     }
     return grades;
   }
@@ -128,15 +122,6 @@ export default function Dashboard() {
         const buf = await file.arrayBuffer();
         const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
         const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
-        const cleanG = t => {
-          let c = t.replace(/[^A-Za-z0-9+-]/g,"").toUpperCase();
-          if (gradeSet.has(c)) return c;
-          c = c.replace(/O/g,"0").replace(/l/g,"1").replace(/I/g,"1");
-          c = c.replace(/4/g,"+").replace(/[^\w+-]/g,"");
-          for (const g of gradeSet) if (c.includes(g.replace(/[^\w]/g,"")) || g.replace(/[^\w]/g,"").includes(c)) return g;
-          return null;
-        };
-        const found = {};
         const allLines = [];
         let needsOcr = false;
         for (let i = 1; i <= pdf.numPages; i++) {
@@ -156,39 +141,7 @@ export default function Dashboard() {
           }
           for (const y of Object.keys(yLines).map(Number).sort((a, b) => b - a)) {
             const row = yLines[y].sort((a, b) => a.x - b.x);
-            const joined = row.map(i => i.str).join(" ").trim();
-            allLines.push(joined);
-            const tokens = joined.split(/\s+/);
-            for (let t = 0; t < tokens.length; t++) {
-              let code = tokens[t].toUpperCase().replace(/[^A-Z0-9]/g,"");
-              if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-                for (let j = Math.max(0, t - 3); j < Math.min(tokens.length, t + 15); j++) {
-                  if (j === t) continue;
-                  const g = cleanG(tokens[j]);
-                  if (g) { found[code] = g; break; }
-                  if (j + 1 < tokens.length) {
-                    const combo = cleanG(tokens[j] + tokens[j + 1]);
-                    if (combo) { found[code] = combo; break; }
-                  }
-                }
-              }
-              if (t + 1 < tokens.length && /^[A-Z]{3,4}$/.test(tokens[t].toUpperCase())) {
-                const digits = tokens[t + 1].replace(/[^0-9]/g,"");
-                if (digits.length >= 2 && digits.length <= 4) {
-                  code = tokens[t].toUpperCase() + digits;
-                  if (!found[code] && /^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-                    for (let j = t + 2; j < Math.min(tokens.length, t + 15); j++) {
-                      const g = cleanG(tokens[j]);
-                      if (g) { found[code] = g; break; }
-                      if (j + 1 < tokens.length) {
-                        const combo = cleanG(tokens[j] + tokens[j + 1]);
-                        if (combo) { found[code] = combo; break; }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            allLines.push(row.map(i => i.str).join(" ").trim());
           }
         }
         if (needsOcr) {
@@ -219,44 +172,15 @@ export default function Dashboard() {
             ctx2d.fillRect(0, 0, canvas.width, canvas.height);
             await page.render({ canvasContext: ctx2d, viewport: vp }).promise;
             const { data: { text } } = await window.Tesseract.recognize(canvas, "eng+ara", { logger: () => {} });
-            const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-            for (const joined of lines) {
-              allLines.push(joined);
-              const tokens = joined.split(/\s+/);
-              for (let t = 0; t < tokens.length; t++) {
-                let code = tokens[t].toUpperCase().replace(/[^A-Z0-9]/g,"");
-                if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-                  for (let j = Math.max(0, t - 3); j < Math.min(tokens.length, t + 15); j++) {
-                    if (j === t) continue;
-                    const g = cleanG(tokens[j]);
-                    if (g) { found[code] = g; break; }
-                    if (j + 1 < tokens.length) {
-                      const combo = cleanG(tokens[j] + tokens[j + 1]);
-                      if (combo) { found[code] = combo; break; }
-                    }
-                  }
-                }
-                if (t + 1 < tokens.length && /^[A-Z]{3,4}$/.test(tokens[t].toUpperCase())) {
-                  const digits = tokens[t + 1].replace(/[^0-9]/g,"");
-                  if (digits.length >= 2 && digits.length <= 4) {
-                    code = tokens[t].toUpperCase() + digits;
-                    if (!found[code] && /^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-                      for (let j = t + 2; j < Math.min(tokens.length, t + 15); j++) {
-                        const g = cleanG(tokens[j]);
-                        if (g) { found[code] = g; break; }
-                        if (j + 1 < tokens.length) {
-                          const combo = cleanG(tokens[j] + tokens[j + 1]);
-                          if (combo) { found[code] = combo; break; }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+            for (const line of text.split("\n")) {
+              const trimmed = line.trim();
+              if (trimmed) allLines.push(trimmed);
             }
           }
         }
-        setImportHtml(allLines.join("\n"));
+        const fullText = allLines.join("\n");
+        setImportHtml(fullText);
+        const found = findGradesInText(fullText, gradeSet);
         const count = Object.keys(found).length;
         if (count > 0) {
           bulkSetGrades(found);
