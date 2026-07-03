@@ -100,11 +100,12 @@ export default function Dashboard() {
         const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
         const found = {};
         const allLines = [];
+        let needsOcr = false;
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
           if (!content.items || content.items.length === 0) {
-            allLines.push(`[Page ${i}: no selectable text]`);
+            needsOcr = true;
             continue;
           }
           const yLines = {};
@@ -119,6 +120,60 @@ export default function Dashboard() {
             const row = yLines[y].sort((a, b) => a.x - b.x);
             const joined = row.map(i => i.str).join(" ").trim();
             allLines.push(joined);
+            const tokens = joined.split(/\s+/);
+            for (let t = 0; t < tokens.length; t++) {
+              const code = tokens[t].toUpperCase();
+              if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
+                for (let j = Math.max(0, t - 6); j < Math.min(tokens.length, t + 10); j++) {
+                  if (j === t) continue;
+                  const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
+                  if (gradeSet.has(cleaned)) { found[code] = cleaned; break; }
+                }
+              }
+            }
+          }
+        }
+        if (needsOcr) {
+          toast("PDF is image-based, running OCR...");
+          if (!window.Tesseract) {
+            await new Promise((res, rej) => {
+              const s = document.createElement("script");
+              s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+              s.onload = res; s.onerror = () => rej(new Error("Failed to load Tesseract.js"));
+              document.head.appendChild(s);
+            });
+          }
+          const ocrPages = [];
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const txt = await (await pdf.getPage(i)).getTextContent();
+            if (!txt.items || txt.items.length === 0) ocrPages.push(i);
+          }
+          for (let idx = 0; idx < ocrPages.length; idx++) {
+            const i = ocrPages[idx];
+            toast(`OCR page ${idx + 1}/${ocrPages.length}...`);
+            const page = await pdf.getPage(i);
+            const vp = page.getViewport({ scale: 2.0 });
+            const canvas = document.createElement("canvas");
+            canvas.width = vp.width;
+            canvas.height = vp.height;
+            const ctx2d = canvas.getContext("2d");
+            await page.render({ canvasContext: ctx2d, viewport: vp }).promise;
+            const { data: { text } } = await window.Tesseract.recognize(canvas, "eng+ara", { logger: () => {} });
+            const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+            for (const joined of lines) {
+              allLines.push(joined);
+              const tokens = joined.split(/\s+/);
+              for (let t = 0; t < tokens.length; t++) {
+                const code = tokens[t].toUpperCase();
+                if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
+                  for (let j = Math.max(0, t - 6); j < Math.min(tokens.length, t + 10); j++) {
+                    if (j === t) continue;
+                    const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
+                    if (gradeSet.has(cleaned)) { found[code] = cleaned; break; }
+                  }
+                }
+              }
+            }
           }
         }
         setImportHtml(allLines.join("\n"));
