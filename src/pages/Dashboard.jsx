@@ -59,22 +59,70 @@ export default function Dashboard() {
     return grades;
   }
 
-  function handleFileUpload(e) {
+  function parseReportText(text) {
+    const grades = {};
+    const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
+    const lines = text.split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      const tokens = trimmed.split(/\s+/);
+      for (let i = 0; i < tokens.length; i++) {
+        if (/^[A-Za-z]{3}\d{3}$/.test(tokens[i]) && i + 1 < tokens.length) {
+          const candidate = tokens[i + 1].replace(/[^A-Za-z0-9+-]/g, "");
+          if (gradeSet.has(candidate)) {
+            grades[tokens[i]] = candidate;
+          }
+        }
+      }
+    }
+    return grades;
+  }
+
+  async function handleFileUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setImportHtml(ev.target?.result || "");
-    };
-    reader.readAsText(file);
     e.target.value = "";
+    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+      try {
+        const pdfjs = await import("pdfjs-dist");
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.mjs", import.meta.url).toString();
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: buf }).promise;
+        let text = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          let lines = [], cur = [], lastY = null;
+          for (const item of content.items) {
+            const y = item.transform[5];
+            if (lastY !== null && Math.abs(y - lastY) > 5) {
+              lines.push(cur.join(" "));
+              cur = [];
+            }
+            cur.push(item.str);
+            lastY = y;
+          }
+          if (cur.length) lines.push(cur.join(" "));
+          text += lines.join("\n") + "\n";
+        }
+        setImportHtml(text);
+      } catch (err) {
+        toast("Failed to parse PDF: " + err.message);
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImportHtml(ev.target?.result || "");
+      reader.readAsText(file);
+    }
   }
 
   function handleImport() {
-    const parsed = parseReportHTML(importHtml);
+    const isHtml = /<!DOCTYPE html|<html|<table|\.semester/i.test(importHtml);
+    const parsed = isHtml ? parseReportHTML(importHtml) : parseReportText(importHtml);
     const count = Object.keys(parsed).length;
     if (count === 0) {
-      toast("No grades found in the report HTML");
+      toast("No grades found in the " + (isHtml ? "HTML" : "PDF text"));
       return;
     }
     bulkSetGrades(parsed);
@@ -1246,7 +1294,7 @@ export default function Dashboard() {
                 or upload the file directly.
                 The system will extract all course codes and grades.
               </p>
-              <input ref={fileInputRef} type="file" accept=".html,.htm"
+              <input ref={fileInputRef} type="file" accept=".html,.htm,.pdf"
                 onChange={handleFileUpload}
                 style={{ display: "none" }} />
               <button onClick={() => fileInputRef.current?.click()}
