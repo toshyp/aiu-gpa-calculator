@@ -103,37 +103,31 @@ export default function Dashboard() {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
+          if (!content.items || content.items.length === 0) {
+            allLines.push(`[Page ${i}: no selectable text]`);
+            continue;
+          }
           const yLines = {};
           for (const item of content.items) {
+            if (!item.transform) continue;
             const y = Math.round(item.transform[5]);
             const x = Math.round(item.transform[4]);
             if (!yLines[y]) yLines[y] = [];
-            yLines[y].push({ x, str: item.str });
+            yLines[y].push({ x, str: item.str || "" });
           }
           for (const y of Object.keys(yLines).map(Number).sort((a, b) => b - a)) {
             const row = yLines[y].sort((a, b) => a.x - b.x);
             const joined = row.map(i => i.str).join(" ").trim();
             allLines.push(joined);
-            const tokens = joined.split(/\s+/);
-            for (let t = 0; t < tokens.length; t++) {
-              const code = tokens[t].toUpperCase();
-              if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-                for (let j = Math.max(0, t - 6); j < Math.min(tokens.length, t + 10); j++) {
-                  if (j === t) continue;
-                  const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
-                  if (gradeSet.has(cleaned)) { found[code] = cleaned; break; }
-                }
-              }
-            }
           }
         }
+        setImportHtml(allLines.join("\n"));
         const count = Object.keys(found).length;
         if (count > 0) {
           bulkSetGrades(found);
           setShowImportModal(false);
           toast(`Imported ${count} grades from PDF`);
         } else {
-          setImportHtml(allLines.join("\n"));
           toast("No grades found — raw text loaded in editor");
         }
       } catch (err) {
