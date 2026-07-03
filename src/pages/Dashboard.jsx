@@ -62,16 +62,46 @@ export default function Dashboard() {
   function parseReportText(text) {
     const grades = {};
     const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
+    const clean = t => t.replace(/[^A-Za-z0-9+-]/g, "").toUpperCase();
+    const cleanGrade = t => {
+      let c = clean(t);
+      if (gradeSet.has(c)) return c;
+      c = c.replace(/O/g,"0").replace(/l/g,"1").replace(/I/g,"1").replace(/B/g,"8").replace(/S/g,"5");
+      c = c.replace(/4/g,"+").replace(/[^\w+-]/g,"");
+      for (const g of gradeSet)
+        if (c.includes(g.replace(/[^\w]/g,"")) || g.replace(/[^\w]/g,"").includes(c))
+          return g;
+      return null;
+    };
+    function extractGradesFromLine(tokens, codeIdx) {
+      for (let j = Math.max(0, codeIdx - 3); j < Math.min(tokens.length, codeIdx + 15); j++) {
+        if (j === codeIdx) continue;
+        const g = cleanGrade(tokens[j]);
+        if (g) return g;
+        if (j + 1 < tokens.length) {
+          const combo = cleanGrade(tokens[j] + tokens[j + 1]);
+          if (combo) return combo;
+        }
+      }
+      return null;
+    }
     const lines = text.split("\n");
     for (const line of lines) {
       const tokens = line.trim().split(/\s+/);
       for (let i = 0; i < tokens.length; i++) {
-        const t = tokens[i].toUpperCase();
-        if (/^[A-Z]{3,4}\d{2,4}$/.test(t)) {
-          for (let j = i + 1; j < Math.min(i + 15, tokens.length); j++) {
-            const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
-            const grade = gradeSet.has(cleaned) ? cleaned : gradeSet.has(tokens[j]) ? tokens[j] : null;
-            if (grade) { grades[t] = grade; break; }
+        let code = clean(tokens[i]);
+        if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
+          const g = extractGradesFromLine(tokens, i);
+          if (g) grades[code] = g;
+        }
+        if (i + 1 < tokens.length && /^[A-Z]{3,4}$/.test(tokens[i].toUpperCase())) {
+          const digits = tokens[i + 1].replace(/[^0-9]/g, "");
+          if (digits.length >= 2 && digits.length <= 4) {
+            code = tokens[i].toUpperCase() + digits;
+            if (!grades[code] && /^[A-Z]{3,4}\d{2,4}$/.test(code)) {
+              const g = extractGradesFromLine(tokens, i + 1);
+              if (g) grades[code] = g;
+            }
           }
         }
       }
@@ -98,6 +128,14 @@ export default function Dashboard() {
         const buf = await file.arrayBuffer();
         const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
         const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
+        const cleanG = t => {
+          let c = t.replace(/[^A-Za-z0-9+-]/g,"").toUpperCase();
+          if (gradeSet.has(c)) return c;
+          c = c.replace(/O/g,"0").replace(/l/g,"1").replace(/I/g,"1");
+          c = c.replace(/4/g,"+").replace(/[^\w+-]/g,"");
+          for (const g of gradeSet) if (c.includes(g.replace(/[^\w]/g,"")) || g.replace(/[^\w]/g,"").includes(c)) return g;
+          return null;
+        };
         const found = {};
         const allLines = [];
         let needsOcr = false;
@@ -122,12 +160,32 @@ export default function Dashboard() {
             allLines.push(joined);
             const tokens = joined.split(/\s+/);
             for (let t = 0; t < tokens.length; t++) {
-              const code = tokens[t].toUpperCase();
+              let code = tokens[t].toUpperCase().replace(/[^A-Z0-9]/g,"");
               if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-                for (let j = Math.max(0, t - 6); j < Math.min(tokens.length, t + 10); j++) {
+                for (let j = Math.max(0, t - 3); j < Math.min(tokens.length, t + 15); j++) {
                   if (j === t) continue;
-                  const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
-                  if (gradeSet.has(cleaned)) { found[code] = cleaned; break; }
+                  const g = cleanG(tokens[j]);
+                  if (g) { found[code] = g; break; }
+                  if (j + 1 < tokens.length) {
+                    const combo = cleanG(tokens[j] + tokens[j + 1]);
+                    if (combo) { found[code] = combo; break; }
+                  }
+                }
+              }
+              if (t + 1 < tokens.length && /^[A-Z]{3,4}$/.test(tokens[t].toUpperCase())) {
+                const digits = tokens[t + 1].replace(/[^0-9]/g,"");
+                if (digits.length >= 2 && digits.length <= 4) {
+                  code = tokens[t].toUpperCase() + digits;
+                  if (!found[code] && /^[A-Z]{3,4}\d{2,4}$/.test(code)) {
+                    for (let j = t + 2; j < Math.min(tokens.length, t + 15); j++) {
+                      const g = cleanG(tokens[j]);
+                      if (g) { found[code] = g; break; }
+                      if (j + 1 < tokens.length) {
+                        const combo = cleanG(tokens[j] + tokens[j + 1]);
+                        if (combo) { found[code] = combo; break; }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -152,11 +210,13 @@ export default function Dashboard() {
             const i = ocrPages[idx];
             toast(`OCR page ${idx + 1}/${ocrPages.length}...`);
             const page = await pdf.getPage(i);
-            const vp = page.getViewport({ scale: 2.0 });
+            const vp = page.getViewport({ scale: 3.0 });
             const canvas = document.createElement("canvas");
             canvas.width = vp.width;
             canvas.height = vp.height;
             const ctx2d = canvas.getContext("2d");
+            ctx2d.fillStyle = "white";
+            ctx2d.fillRect(0, 0, canvas.width, canvas.height);
             await page.render({ canvasContext: ctx2d, viewport: vp }).promise;
             const { data: { text } } = await window.Tesseract.recognize(canvas, "eng+ara", { logger: () => {} });
             const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
@@ -164,12 +224,32 @@ export default function Dashboard() {
               allLines.push(joined);
               const tokens = joined.split(/\s+/);
               for (let t = 0; t < tokens.length; t++) {
-                const code = tokens[t].toUpperCase();
+                let code = tokens[t].toUpperCase().replace(/[^A-Z0-9]/g,"");
                 if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-                  for (let j = Math.max(0, t - 6); j < Math.min(tokens.length, t + 10); j++) {
+                  for (let j = Math.max(0, t - 3); j < Math.min(tokens.length, t + 15); j++) {
                     if (j === t) continue;
-                    const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
-                    if (gradeSet.has(cleaned)) { found[code] = cleaned; break; }
+                    const g = cleanG(tokens[j]);
+                    if (g) { found[code] = g; break; }
+                    if (j + 1 < tokens.length) {
+                      const combo = cleanG(tokens[j] + tokens[j + 1]);
+                      if (combo) { found[code] = combo; break; }
+                    }
+                  }
+                }
+                if (t + 1 < tokens.length && /^[A-Z]{3,4}$/.test(tokens[t].toUpperCase())) {
+                  const digits = tokens[t + 1].replace(/[^0-9]/g,"");
+                  if (digits.length >= 2 && digits.length <= 4) {
+                    code = tokens[t].toUpperCase() + digits;
+                    if (!found[code] && /^[A-Z]{3,4}\d{2,4}$/.test(code)) {
+                      for (let j = t + 2; j < Math.min(tokens.length, t + 15); j++) {
+                        const g = cleanG(tokens[j]);
+                        if (g) { found[code] = g; break; }
+                        if (j + 1 < tokens.length) {
+                          const combo = cleanG(tokens[j] + tokens[j + 1]);
+                          if (combo) { found[code] = combo; break; }
+                        }
+                      }
+                    }
                   }
                 }
               }
