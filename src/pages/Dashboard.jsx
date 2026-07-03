@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importHtml, setImportHtml] = useState("");
   const importRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   function parseReportHTML(html) {
     const parser = new DOMParser();
@@ -56,6 +57,17 @@ export default function Dashboard() {
       }
     });
     return grades;
+  }
+
+  function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setImportHtml(ev.target?.result || "");
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   }
 
   function handleImport() {
@@ -1230,9 +1242,21 @@ export default function Dashboard() {
                 </button>
               </div>
               <p style={{ color: "var(--text-secondary-2)", fontSize: "13px", margin: "0 0 12px" }}>
-                Open your saved Print Report HTML file and paste the contents below.
+                Open your saved Print Report HTML file and paste the contents below,
+                or upload the file directly.
                 The system will extract all course codes and grades.
               </p>
+              <input ref={fileInputRef} type="file" accept=".html,.htm"
+                onChange={handleFileUpload}
+                style={{ display: "none" }} />
+              <button onClick={() => fileInputRef.current?.click()}
+                style={{
+                  padding: "8px 16px", borderRadius: "8px", border: "1px solid var(--card-border)",
+                  background: "var(--card-bg-2)", color: "var(--accent-light)",
+                  cursor: "pointer", fontSize: "13px", fontWeight: 500, marginBottom: "10px",
+                  display: "flex", alignItems: "center", gap: "6px"
+                }}
+              ><Upload size={14} /> Upload HTML File</button>
               <textarea
                 value={importHtml}
                 onChange={e => setImportHtml(e.target.value)}
