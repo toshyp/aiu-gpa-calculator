@@ -902,71 +902,8 @@ export default function Dashboard() {
                       }}>
                         {getGrade(code)}
                       </span>
-        </div>
-
-        {/* Import Modal */}
-        {showImportModal && (
-          <div ref={importRef} style={{
-            position: "fixed", inset: 0, zIndex: 1000,
-            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
-            display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
-          }}
-            onClick={e => { if (e.target === importRef.current) setShowImportModal(false); }}
-          >
-            <div style={{
-              background: "var(--card-bg)", borderRadius: "16px",
-              border: "1px solid var(--card-border)",
-              maxWidth: "640px", width: "100%", padding: "24px",
-              boxShadow: "0 24px 80px rgba(0,0,0,0.4)"
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                <h3 style={{ color: "var(--text)", fontSize: "17px", fontWeight: 600, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Upload size={18} color="var(--accent)" /> Import Grades from Report
-                </h3>
-                <button onClick={() => setShowImportModal(false)}
-                  style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}>
-                  <X size={20} />
-                </button>
-              </div>
-              <p style={{ color: "var(--text-secondary-2)", fontSize: "13px", margin: "0 0 12px" }}>
-                Open your saved Print Report HTML file and paste the contents below.
-                The system will extract all course codes and grades.
-              </p>
-              <textarea
-                value={importHtml}
-                onChange={e => setImportHtml(e.target.value)}
-                placeholder={"<html>...</html>"}
-                rows={10}
-                style={{
-                  width: "100%", padding: "12px", borderRadius: "10px",
-                  border: "1px solid var(--card-border)",
-                  background: "var(--input-bg)", color: "var(--text)",
-                  fontSize: "12px", fontFamily: "monospace", resize: "vertical",
-                  outline: "none", boxSizing: "border-box"
-                }}
-              />
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "16px" }}>
-                <button onClick={() => setShowImportModal(false)}
-                  style={{
-                    padding: "10px 20px", borderRadius: "10px",
-                    border: "1px solid var(--card-border)",
-                    background: "var(--card-bg)", color: "var(--text-secondary)",
-                    cursor: "pointer", fontSize: "13px", fontWeight: 500
-                  }}
-                >Cancel</button>
-                <button onClick={handleImport}
-                  style={{
-                    padding: "10px 24px", borderRadius: "10px", border: "none",
-                    background: "var(--accent-gradient)", color: "var(--btn-text)",
-                    cursor: "pointer", fontSize: "13px", fontWeight: 600,
-                    display: "flex", alignItems: "center", gap: "6px"
-                  }}
-                ><Upload size={15} /> Import</button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+                    </div>
+                  </div>
                 ))}
             </div>
           </div>
@@ -1267,6 +1204,69 @@ export default function Dashboard() {
             AIU GPA Calculator — Alamein International University © {new Date().getFullYear()}
           </span>
         </div>
+
+        {/* Import Modal */}
+        {showImportModal && (
+          <div ref={importRef} style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+          }}
+            onClick={e => { if (e.target === importRef.current) setShowImportModal(false); }}
+          >
+            <div style={{
+              background: "var(--card-bg)", borderRadius: "16px",
+              border: "1px solid var(--card-border)",
+              maxWidth: "640px", width: "100%", padding: "24px",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.4)"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ color: "var(--text)", fontSize: "17px", fontWeight: 600, margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Upload size={18} color="var(--accent)" /> Import Grades from Report
+                </h3>
+                <button onClick={() => setShowImportModal(false)}
+                  style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}>
+                  <X size={20} />
+                </button>
+              </div>
+              <p style={{ color: "var(--text-secondary-2)", fontSize: "13px", margin: "0 0 12px" }}>
+                Open your saved Print Report HTML file and paste the contents below.
+                The system will extract all course codes and grades.
+              </p>
+              <textarea
+                value={importHtml}
+                onChange={e => setImportHtml(e.target.value)}
+                placeholder={"<html>...</html>"}
+                rows={10}
+                style={{
+                  width: "100%", padding: "12px", borderRadius: "10px",
+                  border: "1px solid var(--card-border)",
+                  background: "var(--input-bg)", color: "var(--text)",
+                  fontSize: "12px", fontFamily: "monospace", resize: "vertical",
+                  outline: "none", boxSizing: "border-box"
+                }}
+              />
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "16px" }}>
+                <button onClick={() => setShowImportModal(false)}
+                  style={{
+                    padding: "10px 20px", borderRadius: "10px",
+                    border: "1px solid var(--card-border)",
+                    background: "var(--card-bg)", color: "var(--text-secondary)",
+                    cursor: "pointer", fontSize: "13px", fontWeight: 500
+                  }}
+                >Cancel</button>
+                <button onClick={handleImport}
+                  style={{
+                    padding: "10px 24px", borderRadius: "10px", border: "none",
+                    background: "var(--accent-gradient)", color: "var(--btn-text)",
+                    cursor: "pointer", fontSize: "13px", fontWeight: 600,
+                    display: "flex", alignItems: "center", gap: "6px"
+                  }}
+                ><Upload size={15} /> Import</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
