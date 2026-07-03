@@ -67,8 +67,8 @@ export default function Dashboard() {
       const tokens = line.trim().split(/\s+/);
       for (let i = 0; i < tokens.length; i++) {
         const t = tokens[i].toUpperCase();
-        if (/^[A-Z]{3}\d{3}$/.test(t)) {
-          for (let j = i + 1; j < Math.min(i + 6, tokens.length); j++) {
+        if (/^[A-Z]{3,4}\d{2,4}$/.test(t)) {
+          for (let j = i + 1; j < Math.min(i + 15, tokens.length); j++) {
             const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
             const grade = gradeSet.has(cleaned) ? cleaned : gradeSet.has(tokens[j]) ? tokens[j] : null;
             if (grade) { grades[t] = grade; break; }
@@ -89,26 +89,35 @@ export default function Dashboard() {
         const pdfjs = await import(`https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.min.mjs`);
         pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.worker.min.mjs`;
         const buf = await file.arrayBuffer();
-        const pdf = await pdfjs.getDocument({ data: buf }).promise;
-        let text = "";
+        const pdf = await pdfjs.getDocument({ data: buf, useSystemFonts: true }).promise;
+        const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
+        const found = {};
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          let lines = [], cur = [], lastY = null;
-          for (const item of content.items) {
-            const y = item.transform[5];
-            if (lastY !== null && Math.abs(y - lastY) > 5) {
-              lines.push(cur.join(" "));
-              cur = [];
+          const items = content.items
+            .map(item => ({ str: item.str, y: Math.round(item.transform[5]), x: Math.round(item.transform[4]) }))
+            .sort((a, b) => b.y - a.y || a.x - b.x);
+          for (let idx = 0; idx < items.length; idx++) {
+            const code = items[idx].str.toUpperCase().trim();
+            if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
+              for (let j = idx + 1; j < Math.min(idx + 30, items.length); j++) {
+                const raw = items[j].str;
+                const cleaned = raw.replace(/[^A-Za-z0-9+-]/g, "");
+                if (gradeSet.has(cleaned)) { found[code] = cleaned; break; }
+                if (gradeSet.has(raw)) { found[code] = raw; break; }
+              }
             }
-            cur.push(item.str);
-            lastY = y;
           }
-          if (cur.length) lines.push(cur.join(" "));
-          text += lines.join("\n") + "\n";
         }
-        setImportHtml(text);
-        toast("PDF parsed successfully");
+        const count = Object.keys(found).length;
+        if (count > 0) {
+          bulkSetGrades(found);
+          setShowImportModal(false);
+          toast(`Imported ${count} grades from PDF`);
+        } else {
+          toast("No grades found in PDF");
+        }
       } catch (err) {
         toast("PDF error: " + (err.message || err));
       }
