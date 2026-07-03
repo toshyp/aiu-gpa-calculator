@@ -64,14 +64,14 @@ export default function Dashboard() {
     const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
     const lines = text.split("\n");
     for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      const tokens = trimmed.split(/\s+/);
+      const tokens = line.trim().split(/\s+/);
       for (let i = 0; i < tokens.length; i++) {
-        if (/^[A-Za-z]{3}\d{3}$/.test(tokens[i]) && i + 1 < tokens.length) {
-          const candidate = tokens[i + 1].replace(/[^A-Za-z0-9+-]/g, "");
-          if (gradeSet.has(candidate)) {
-            grades[tokens[i]] = candidate;
+        const t = tokens[i].toUpperCase();
+        if (/^[A-Z]{3}\d{3}$/.test(t)) {
+          for (let j = i + 1; j < Math.min(i + 6, tokens.length); j++) {
+            const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
+            const grade = gradeSet.has(cleaned) ? cleaned : gradeSet.has(tokens[j]) ? tokens[j] : null;
+            if (grade) { grades[t] = grade; break; }
           }
         }
       }
@@ -85,8 +85,9 @@ export default function Dashboard() {
     e.target.value = "";
     if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
       try {
-        const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.1.200/build/pdf.worker.min.mjs";
+        const PDF_VER = "5.4.149";
+        const pdfjs = await import(`https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.min.mjs`);
+        pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.worker.min.mjs`;
         const buf = await file.arrayBuffer();
         const pdf = await pdfjs.getDocument({ data: buf }).promise;
         let text = "";
@@ -107,8 +108,9 @@ export default function Dashboard() {
           text += lines.join("\n") + "\n";
         }
         setImportHtml(text);
+        toast("PDF parsed successfully");
       } catch (err) {
-        toast("Failed to parse PDF: " + err.message);
+        toast("PDF error: " + (err.message || err));
       }
     } else {
       const reader = new FileReader();
@@ -1304,7 +1306,7 @@ export default function Dashboard() {
                   cursor: "pointer", fontSize: "13px", fontWeight: 500, marginBottom: "10px",
                   display: "flex", alignItems: "center", gap: "6px"
                 }}
-              ><Upload size={14} /> Upload HTML File</button>
+              ><Upload size={14} /> Upload Report File</button>
               <textarea
                 value={importHtml}
                 onChange={e => setImportHtml(e.target.value)}
