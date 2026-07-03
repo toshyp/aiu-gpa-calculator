@@ -118,7 +118,7 @@ export default function Dashboard() {
             for (let t = 0; t < tokens.length; t++) {
               const code = tokens[t].toUpperCase();
               if (/^[A-Z]{3,4}\d{2,4}$/.test(code)) {
-                for (let j = Math.max(0, t - 2); j < Math.min(tokens.length, t + 10); j++) {
+                for (let j = Math.max(0, t - 6); j < Math.min(tokens.length, t + 10); j++) {
                   if (j === t) continue;
                   const cleaned = tokens[j].replace(/[^A-Za-z0-9+-]/g, "");
                   if (gradeSet.has(cleaned)) { found[code] = cleaned; break; }
