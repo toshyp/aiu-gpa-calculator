@@ -86,10 +86,17 @@ export default function Dashboard() {
     if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
       try {
         const PDF_VER = "5.4.149";
-        const pdfjs = await import(`https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.min.mjs`);
-        pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.worker.min.mjs`;
+        if (!window.pdfjsLib) {
+          await new Promise((res, rej) => {
+            const s = document.createElement("script");
+            s.src = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.min.js`;
+            s.onload = res; s.onerror = () => rej(new Error("Failed to load pdf.js"));
+            document.head.appendChild(s);
+          });
+        }
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.worker.min.js`;
         const buf = await file.arrayBuffer();
-        const pdf = await pdfjs.getDocument({ data: buf, useSystemFonts: true }).promise;
+        const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
         const gradeSet = new Set(["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-","F"]);
         const found = {};
         for (let i = 1; i <= pdf.numPages; i++) {
