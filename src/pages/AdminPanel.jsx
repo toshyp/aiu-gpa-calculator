@@ -455,7 +455,7 @@ export default function AdminPanel() {
               border: "1px solid var(--card-border)", overflow: "hidden", marginBottom: "16px"
             }}>
               <div className="admin-grid-scroll-inner" style={{
-                display: "grid", gridTemplateColumns: "120px 1fr 100px 130px 100px",
+                display: "grid", gridTemplateColumns: "120px 1fr 100px 130px 150px 100px",
                 padding: "12px 20px", borderBottom: "1px solid var(--card-border)",
                 color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
               }}>
@@ -463,6 +463,7 @@ export default function AdminPanel() {
                 <span>Registered</span>
                 <span>Password</span>
                 <span>Program / Track</span>
+                <span>Last Login</span>
                 <span></span>
               </div>
               {allStudents.length === 0 && (
@@ -473,7 +474,7 @@ export default function AdminPanel() {
               {allStudents.map(s => (
                 <div key={s.student_id}>
                   <div style={{
-                    display: "grid", gridTemplateColumns: "120px 1fr 100px 130px 100px",
+                    display: "grid", gridTemplateColumns: "120px 1fr 100px 130px 150px 100px",
                     padding: "10px 20px", borderBottom: "1px solid var(--divider)",
                     alignItems: "center", gap: "8px"
                   }}>
@@ -486,6 +487,9 @@ export default function AdminPanel() {
                     </span>
                     <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
                       {[s.program, s.track].filter(Boolean).join(" / ") || "—"}
+                    </span>
+                    <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
+                      {s.last_login ? new Date(s.last_login).toLocaleString() : "Never"}
                     </span>
                     <div style={{ display: "flex", gap: "6px" }}>
                       <button onClick={() => viewStudentDetails(s.student_id)}
