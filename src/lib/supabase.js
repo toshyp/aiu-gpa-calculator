@@ -91,7 +91,7 @@ export async function loadStudentData(studentId) {
   }
 }
 
-export async function saveStudentData(studentId, grades, ucSlots, ueSlots, electiveSelections) {
+export async function saveStudentData(studentId, grades, ucSlots, ueSlots, electiveSelections, selectedProgram, selectedTrack) {
   try {
     if (!supabase || !studentId) return { error: "Supabase not configured" };
 
@@ -140,6 +140,15 @@ export async function saveStudentData(studentId, grades, ucSlots, ueSlots, elect
       } else { return { error: delErr }; }
     }
 
+    if (selectedProgram || selectedTrack) {
+      try {
+        await supabase.from("students").update({
+          ...(selectedProgram && { program: selectedProgram }),
+          ...(selectedTrack && { track: selectedTrack }),
+        }).eq("student_id", studentId);
+      } catch (e) { /* columns may not exist yet */ }
+    }
+
     const results = await Promise.all(ops);
     const error = results.find(r => r?.error)?.error;
     return { error };
@@ -183,13 +192,18 @@ export async function getStudentDetails(studentId) {
       supabase.from("uc_selections").select("*").eq("student_id", studentId),
       supabase.from("ue_selections").select("*").eq("student_id", studentId),
       supabase.from("elective_selections").select("*").eq("student_id", studentId),
+      supabase.from("students").select("password, program, track").eq("student_id", studentId).maybeSingle(),
     ]);
     const get = (i) => results[i].status === "fulfilled" ? (results[i].value.data || []) : [];
+    const studentInfo = results[4].status === "fulfilled" ? results[4].value.data : null;
     return {
       grades: get(0),
       ucSelections: get(1),
       ueSelections: get(2),
       electiveSelections: get(3),
+      password: studentInfo?.password || null,
+      program: studentInfo?.program || null,
+      track: studentInfo?.track || null,
     };
   } catch (e) {
     console.error("getStudentDetails failed:", e);

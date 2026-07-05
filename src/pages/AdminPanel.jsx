@@ -455,13 +455,14 @@ export default function AdminPanel() {
               border: "1px solid var(--card-border)", overflow: "hidden", marginBottom: "16px"
             }}>
               <div className="admin-grid-scroll-inner" style={{
-                display: "grid", gridTemplateColumns: "120px 1fr 180px 100px",
+                display: "grid", gridTemplateColumns: "120px 1fr 100px 130px 100px",
                 padding: "12px 20px", borderBottom: "1px solid var(--card-border)",
                 color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600, textTransform: "uppercase"
               }}>
                 <span>Student ID</span>
                 <span>Registered</span>
-                <span>Last Login</span>
+                <span>Password</span>
+                <span>Program / Track</span>
                 <span></span>
               </div>
               {allStudents.length === 0 && (
@@ -472,16 +473,19 @@ export default function AdminPanel() {
               {allStudents.map(s => (
                 <div key={s.student_id}>
                   <div style={{
-                    display: "grid", gridTemplateColumns: "120px 1fr 180px 100px",
+                    display: "grid", gridTemplateColumns: "120px 1fr 100px 130px 100px",
                     padding: "10px 20px", borderBottom: "1px solid var(--divider)",
-                    alignItems: "center"
+                    alignItems: "center", gap: "8px"
                   }}>
                     <span style={{ color: "var(--accent)", fontSize: "13px", fontWeight: 600 }}>{s.student_id}</span>
                     <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
                       {s.created_at ? new Date(s.created_at).toLocaleString() : "—"}
                     </span>
+                    <span style={{ color: "var(--text-muted)", fontSize: "12px", fontFamily: "monospace" }}>
+                      {s.password || "—"}
+                    </span>
                     <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-                      {s.last_login ? new Date(s.last_login).toLocaleString() : "Never"}
+                      {[s.program, s.track].filter(Boolean).join(" / ") || "—"}
                     </span>
                     <div style={{ display: "flex", gap: "6px" }}>
                       <button onClick={() => viewStudentDetails(s.student_id)}
@@ -513,6 +517,38 @@ export default function AdminPanel() {
                       background: "rgba(255,255,255,0.02)",
                       borderBottom: "1px solid var(--divider)"
                     }}>
+                      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", marginBottom: "12px" }}>
+                        {studentDetails.password !== null && (
+                          <div style={{ fontSize: "12px" }}>
+                            <span style={{ color: "var(--text-secondary)" }}>Password: </span>
+                            <span style={{ color: "var(--text)", fontFamily: "monospace" }}>{studentDetails.password}</span>
+                          </div>
+                        )}
+                        {studentDetails.program && (
+                          <div style={{ fontSize: "12px" }}>
+                            <span style={{ color: "var(--text-secondary)" }}>Program: </span>
+                            <span style={{ color: "var(--text)" }}>{studentDetails.program}</span>
+                          </div>
+                        )}
+                        {studentDetails.track && (
+                          <div style={{ fontSize: "12px" }}>
+                            <span style={{ color: "var(--text-secondary)" }}>Track: </span>
+                            <span style={{ color: "var(--text)" }}>{studentDetails.track}</span>
+                          </div>
+                        )}
+                        <div style={{ fontSize: "12px" }}>
+                          <span style={{ color: "var(--text-secondary)" }}>Total grades: </span>
+                          <span style={{ color: "var(--accent)", fontWeight: 600 }}>{studentDetails.grades.length}</span>
+                        </div>
+                        <div style={{ fontSize: "12px" }}>
+                          <span style={{ color: "var(--text-secondary)" }}>UC slots: </span>
+                          <span style={{ color: "#8b5cf6", fontWeight: 600 }}>{studentDetails.ucSelections.filter(s => s.course_code).length}/{studentDetails.ucSelections.length}</span>
+                        </div>
+                        <div style={{ fontSize: "12px" }}>
+                          <span style={{ color: "var(--text-secondary)" }}>UE slots: </span>
+                          <span style={{ color: "#ec4899", fontWeight: 600 }}>{studentDetails.ueSelections.filter(s => s.course_code).length}/{studentDetails.ueSelections.length}</span>
+                        </div>
+                      </div>
                       <div style={{ color: "var(--text-muted)", fontSize: "12px", marginBottom: "8px" }}>
                         Grades ({studentDetails.grades.length}):
                       </div>
@@ -521,7 +557,7 @@ export default function AdminPanel() {
                       ) : (
                         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
                           {studentDetails.grades.map(g => (
-                            <span key={g.course_code} style={{
+                            <span key={g.course_code} title={getCourseName(g.course_code)} style={{
                               padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
                               background: "var(--tab-active-bg)", color: "var(--accent)"
                             }}>
@@ -538,7 +574,7 @@ export default function AdminPanel() {
                       ) : (
                         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
                           {studentDetails.ucSelections.map(s => (
-                            <span key={s.slot} style={{
+                            <span key={s.slot} title={getCourseName(s.course_code)} style={{
                               padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
                               background: "rgba(139,92,246,0.1)", color: "#8b5cf6"
                             }}>
@@ -553,9 +589,9 @@ export default function AdminPanel() {
                       {studentDetails.ueSelections.length === 0 ? (
                         <span style={{ color: "var(--text-secondary-2)", fontSize: "11px", fontStyle: "italic" }}>None</span>
                       ) : (
-                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
                           {studentDetails.ueSelections.map(s => (
-                            <span key={s.slot} style={{
+                            <span key={s.slot} title={getCourseName(s.course_code)} style={{
                               padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
                               background: "rgba(236,72,153,0.1)", color: "#ec4899"
                             }}>
@@ -563,6 +599,23 @@ export default function AdminPanel() {
                             </span>
                           ))}
                         </div>
+                      )}
+                      {studentDetails.electiveSelections && studentDetails.electiveSelections.length > 0 && (
+                        <>
+                          <div style={{ color: "var(--text-muted)", fontSize: "12px", margin: "8px 0" }}>
+                            Elective Selections ({studentDetails.electiveSelections.length}):
+                          </div>
+                          <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                            {studentDetails.electiveSelections.map(s => (
+                              <span key={s.slot} title={getCourseName(s.course_code)} style={{
+                                padding: "2px 8px", borderRadius: "6px", fontSize: "11px",
+                                background: "rgba(34,197,94,0.1)", color: "#22c55e"
+                              }}>
+                                {s.slot}: {s.course_code}
+                              </span>
+                            ))}
+                          </div>
+                        </>
                       )}
                     </div>
                   )}

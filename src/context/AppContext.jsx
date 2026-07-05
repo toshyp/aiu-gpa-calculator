@@ -177,6 +177,8 @@ export function AppProvider({ children }) {
           setUeSelections(data.ueSelections || {});
           setCompletedCourses(data.completedCourses || {});
           setSemesterStatus(data.semesterStatus || {});
+          if (data.selectedProgram) setSelectedProgram(data.selectedProgram);
+          if (data.selectedTrack) setSelectedTrack(data.selectedTrack);
         } catch (e) {
           console.error("Failed to parse stored grades data:", e);
         }
@@ -205,7 +207,8 @@ export function AppProvider({ children }) {
     try {
       localStorage.setItem(key, JSON.stringify({
         grades, electiveSelections, ucSelections, ueSelections,
-        completedCourses, semesterStatus
+        completedCourses, semesterStatus,
+        selectedProgram, selectedTrack
       }));
     } catch (e) {
       console.error("Failed to save user data:", e);
@@ -215,7 +218,7 @@ export function AppProvider({ children }) {
     saveTimeoutRef.current = setTimeout(async () => {
       if (supabaseAvailable) {
         try {
-          await saveStudentData(user, grades, ucSelections, ueSelections, electiveSelections);
+          await saveStudentData(user, grades, ucSelections, ueSelections, electiveSelections, selectedProgram, selectedTrack);
         } catch (e) {
           console.error("saveStudentData failed:", e);
         }
