@@ -217,11 +217,8 @@ export function AppProvider({ children }) {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       if (supabaseAvailable) {
-        try {
-          await saveStudentData(user, grades, ucSelections, ueSelections, electiveSelections, selectedProgram, selectedTrack);
-        } catch (e) {
-          console.error("saveStudentData failed:", e);
-        }
+        const result = await saveStudentData(user, grades, ucSelections, ueSelections, electiveSelections, selectedProgram, selectedTrack);
+        if (result?.error) console.error("saveStudentData error:", result.error);
       }
     }, 2000);
   }
@@ -310,12 +307,30 @@ export function AppProvider({ children }) {
 
   async function viewStudentDetails(studentId) {
     try {
-      if (!supabaseAvailable) return;
       if (detailsControllerRef.current) {
         detailsControllerRef.current.abort();
       }
       const controller = new AbortController();
       detailsControllerRef.current = controller;
+      const key = `grades_${studentId}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          if (!controller.signal.aborted) {
+            const gradesArr = Object.entries(data.grades || {}).map(([course_code, grade]) => ({ course_code, grade }));
+            const ucArr = Object.entries(data.ucSelections || {}).map(([slot, course_code]) => ({ slot, course_code }));
+            const ueArr = Object.entries(data.ueSelections || {}).map(([slot, course_code]) => ({ slot, course_code }));
+            const electArr = Object.entries(data.electiveSelections || {}).map(([slot, course_code]) => ({ slot, course_code }));
+            setStudentDetails({
+              studentId, grades: gradesArr, ucSelections: ucArr, ueSelections: ueArr,
+              electiveSelections: electArr, password: null, program: data.selectedProgram || null, track: data.selectedTrack || null,
+            });
+          }
+          return;
+        } catch (e) { /* failed to parse, fall through to Supabase */ }
+      }
+      if (!supabaseAvailable) return;
       const details = await getStudentDetails(studentId);
       if (!controller.signal.aborted && details) {
         setStudentDetails({ studentId, ...details });

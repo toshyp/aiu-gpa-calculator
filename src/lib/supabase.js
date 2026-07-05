@@ -112,13 +112,14 @@ export async function saveStudentData(studentId, grades, ucSlots, ueSlots, elect
       .map(([slot, course_code]) => ({ student_id: studentId, slot, course_code }));
 
     if (gradeEntries.length > 0) {
-      const { error: delErr } = await supabase.from("grades").delete().eq("student_id", studentId);
-      if (!delErr) {
-        const { error: insErr } = await supabase.from("grades").insert(gradeEntries);
-        if (insErr) return { error: insErr };
-      } else { return { error: delErr }; }
-    } else {
-      const { error: delErr } = await supabase.from("grades").delete().eq("student_id", studentId);
+      const { error: upsErr } = await supabase.from("grades").upsert(gradeEntries, { onConflict: "student_id, course_code" });
+      if (upsErr) return { error: upsErr };
+    }
+    const { data: existingGrades } = await supabase.from("grades").select("course_code").eq("student_id", studentId);
+    const currentCodes = Object.keys(grades || {});
+    const toDelete = (existingGrades || []).filter(e => !currentCodes.includes(e.course_code)).map(e => e.course_code);
+    if (toDelete.length > 0) {
+      const { error: delErr } = await supabase.from("grades").delete().eq("student_id", studentId).in("course_code", toDelete);
       if (delErr) return { error: delErr };
     }
     if (ucEntries.length > 0) {
