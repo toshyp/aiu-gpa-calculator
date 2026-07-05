@@ -111,12 +111,15 @@ export async function saveStudentData(studentId, grades, ucSlots, ueSlots, elect
       .filter(([, code]) => code)
       .map(([slot, course_code]) => ({ student_id: studentId, slot, course_code }));
 
-    const ops = [];
-
     if (gradeEntries.length > 0) {
-      ops.push(
-        supabase.from("grades").upsert(gradeEntries, { onConflict: "student_id, course_code" }).select()
-      );
+      const { error: delErr } = await supabase.from("grades").delete().eq("student_id", studentId);
+      if (!delErr) {
+        const { error: insErr } = await supabase.from("grades").insert(gradeEntries);
+        if (insErr) return { error: insErr };
+      } else { return { error: delErr }; }
+    } else {
+      const { error: delErr } = await supabase.from("grades").delete().eq("student_id", studentId);
+      if (delErr) return { error: delErr };
     }
     if (ucEntries.length > 0) {
       const { error: delErr } = await supabase.from("uc_selections").delete().eq("student_id", studentId);
@@ -149,9 +152,7 @@ export async function saveStudentData(studentId, grades, ucSlots, ueSlots, elect
       } catch (e) { /* columns may not exist yet */ }
     }
 
-    const results = await Promise.all(ops);
-    const error = results.find(r => r?.error)?.error;
-    return { error };
+    return { error: null };
   } catch (e) {
     return { error: e };
   }
