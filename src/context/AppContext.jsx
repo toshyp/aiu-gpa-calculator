@@ -151,6 +151,8 @@ export function AppProvider({ children }) {
           data.overrides.forEach(o => { ov[o.code] = { name: o.name, credits: o.credits }; });
           setCourseOverrides(prev => ({ ...ov, ...prev }));
         }
+        if (data.ucPool && data.ucPool.length) setUcPool(data.ucPool.map(c => ({ code: c.code, name: c.name })));
+        if (data.uePool && data.uePool.length) setUePool(data.uePool.map(c => ({ code: c.code, name: c.name })));
       }
       if (data && data.error) {
         setSupabaseAvailable(false);
