@@ -433,6 +433,9 @@ export default function Dashboard() {
 
   const univReqPool = getUcPool();
   const univElectPool = getUePool();
+  const poolNameMap = {};
+  univReqPool.forEach(c => poolNameMap[c.code] = c.name);
+  univElectPool.forEach(c => poolNameMap[c.code] = c.name);
 
   const cardColors = ["#3b82f6", "#8b5cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ec4899"];
 
@@ -899,7 +902,7 @@ export default function Dashboard() {
                       }
                       return pool.map(cCode => (
                         <option key={cCode} value={cCode}>
-                          {cCode} — {courses[cCode]?.name || cCode}
+                          {cCode} — {courses[cCode]?.name || poolNameMap[cCode] || cCode}
                         </option>
                       ));
                     })()}
