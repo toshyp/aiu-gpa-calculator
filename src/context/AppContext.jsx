@@ -151,8 +151,6 @@ export function AppProvider({ children }) {
           data.overrides.forEach(o => { ov[o.code] = { name: o.name, credits: o.credits }; });
           setCourseOverrides(prev => ({ ...ov, ...prev }));
         }
-        if (data.ucPool && data.ucPool.length) setUcPool(data.ucPool.map(c => ({ code: c.code, name: c.name })));
-        if (data.uePool && data.uePool.length) setUePool(data.uePool.map(c => ({ code: c.code, name: c.name })));
       }
       if (data && data.error) {
         setSupabaseAvailable(false);
@@ -395,7 +393,7 @@ export function AppProvider({ children }) {
 
   function getCourseName(code) {
     if (courseOverrides[code]?.name) return courseOverrides[code].name;
-    return courses[code]?.name || ucPool.find(c => c.code === code)?.name || uePool.find(c => c.code === code)?.name || code;
+    return courses[code]?.name || code;
   }
 
   function getEffectiveCourses() {
