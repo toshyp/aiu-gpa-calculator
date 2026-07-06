@@ -395,7 +395,7 @@ export function AppProvider({ children }) {
 
   function getCourseName(code) {
     if (courseOverrides[code]?.name) return courseOverrides[code].name;
-    return courses[code]?.name || code;
+    return courses[code]?.name || ucPool.find(c => c.code === code)?.name || uePool.find(c => c.code === code)?.name || code;
   }
 
   function getEffectiveCourses() {

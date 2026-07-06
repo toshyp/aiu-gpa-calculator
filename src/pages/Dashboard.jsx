@@ -897,11 +897,14 @@ export default function Dashboard() {
                           .map(([, v]) => v);
                         pool = univElectPool.map(c => c.code).filter(c => !selectedElsewhere.includes(c));
                       }
-                      return pool.map(cCode => (
-                        <option key={cCode} value={cCode}>
-                          {cCode} — {courses[cCode]?.name || cCode}
-                        </option>
-                      ));
+                      return pool.map(cCode => {
+                        const poolCourse = isUE ? univElectPool.find(pc => pc.code === cCode) : isUC ? univReqPool.find(pc => pc.code === cCode) : null;
+                        return (
+                          <option key={cCode} value={cCode}>
+                            {cCode} — {poolCourse?.name || courses[cCode]?.name || cCode}
+                          </option>
+                        );
+                      });
                     })()}
                   </select>
                 )}
@@ -1030,7 +1033,7 @@ export default function Dashboard() {
                     <div>
                       <span style={{ color: "var(--text)", fontSize: "13px", fontWeight: 500 }}>{code}</span>
                       <span style={{ color: "var(--text-secondary-2)", fontSize: "12px", marginLeft: "8px" }}>
-                        {courses[code]?.name || ""}
+                        {getCourseName(code)}
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
