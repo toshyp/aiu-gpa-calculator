@@ -98,6 +98,19 @@ export function AppProvider({ children }) {
     try { localStorage.setItem("aiuPools", JSON.stringify({ ucPool, uePool })); } catch (e) { console.error("Failed to save pools:", e); }
   }, [ucPool, uePool]);
 
+  // Sync pools from Supabase if localStorage is empty (new browser/device)
+  useEffect(() => {
+    if (!supabaseAvailable) return;
+    const stored = localStorage.getItem("aiuPools");
+    if (stored) return;
+    loadAdminData().then(data => {
+      if (data && !data.error) {
+        if (data.ucPool && data.ucPool.length) setUcPool(data.ucPool.map(c => ({ code: c.code, name: c.name })));
+        if (data.uePool && data.uePool.length) setUePool(data.uePool.map(c => ({ code: c.code, name: c.name })));
+      }
+    }).catch(() => {});
+  }, [supabaseAvailable]);
+
   useEffect(() => {
     try { localStorage.setItem("aiuPrereqs", JSON.stringify(prereqData)); } catch (e) { console.error("Failed to save prereqs:", e); }
   }, [prereqData]);
