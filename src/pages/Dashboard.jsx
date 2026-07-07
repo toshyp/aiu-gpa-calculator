@@ -897,11 +897,16 @@ export default function Dashboard() {
                           .map(([, v]) => v);
                         pool = univElectPool.map(c => c.code).filter(c => !selectedElsewhere.includes(c));
                       }
-                      return pool.map(cCode => (
-                        <option key={cCode} value={cCode}>
-                          {cCode} — {courses[cCode]?.name || cCode}
-                        </option>
-                      ));
+                      return pool.map(cCode => {
+                        let poolName;
+                        if (isUE) poolName = univElectPool.find(c => c.code === cCode)?.name;
+                        else if (isUC) poolName = univReqPool.find(c => c.code === cCode)?.name;
+                        return (
+                          <option key={cCode} value={cCode}>
+                            {cCode} — {poolName || courses[cCode]?.name || cCode}
+                          </option>
+                        );
+                      });
                     })()}
                   </select>
                 )}
