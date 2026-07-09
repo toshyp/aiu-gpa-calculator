@@ -105,6 +105,7 @@ export function AppProvider({ children }) {
   const [dataLoaded, setDataLoaded] = useState(false);
 
   const saveTimeoutRef = useRef(null);
+  const poolSynced = useRef(false);
 
   useEffect(() => {
     try { localStorage.setItem("aiuTheme", theme); } catch (e) { console.error("Failed to save theme:", e); }
@@ -122,11 +123,10 @@ export function AppProvider({ children }) {
     try { localStorage.setItem("aiuPools", JSON.stringify({ ucPool, uePool })); } catch (e) { console.error("Failed to save pools:", e); }
   }, [ucPool, uePool]);
 
-  // Sync pools from Supabase if localStorage is empty (new browser/device)
+  // Sync pools from Supabase on mount so all students get the latest UE/UC courses
   useEffect(() => {
-    if (!supabaseAvailable) return;
-    const stored = localStorage.getItem("aiuPools");
-    if (stored) return;
+    if (!supabaseAvailable || poolSynced.current) return;
+    poolSynced.current = true;
     loadAdminData().then(data => {
       if (data && !data.error) {
         if (data.ucPool && data.ucPool.length) setUcPool(data.ucPool.map(c => ({ code: c.code, name: c.name })));
