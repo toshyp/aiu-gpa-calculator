@@ -412,6 +412,7 @@ export function AppProvider({ children }) {
   function getCourseCredits(code) {
     if (courseOverrides[code]?.credits !== undefined) return courseOverrides[code].credits;
     if (courses[code]) return courses[code].credits;
+    if (ucPool.find(c => c.code === code) || uePool.find(c => c.code === code)) return 2;
     return 3;
   }
 
