@@ -92,7 +92,7 @@ export function AppProvider({ children }) {
   const [ueSelections, setUeSelections] = useState({});
   const [completedCourses, setCompletedCourses] = useState({});
   const [semesterStatus, setSemesterStatus] = useState({});
-  const [ucPool, setUcPool] = useState(loadPools().ucPool);
+  const [ucPool, setUcPool] = useState([...defaultUcPool]);
   const [uePool, setUePool] = useState(loadPools().uePool);
   const [prereqData, setPrereqData] = useState(loadPrereqs);
   const [courseOverrides, setCourseOverrides] = useState(loadCourseOverrides);
